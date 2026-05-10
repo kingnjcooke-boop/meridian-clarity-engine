@@ -55,6 +55,8 @@ export function BriefScreen({ user, onOpenAction, onOpenStory, onOpenRoadmap }: 
   const firstName = user.name || "Alex";
   const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
   const [scrollIdx, setScrollIdx] = useState(0);
+  const { stories } = useMeridianData();
+  const carouselStories = stories.length ? stories : (STORIES as any);
 
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar fade-in">
