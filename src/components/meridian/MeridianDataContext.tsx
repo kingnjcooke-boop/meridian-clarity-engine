@@ -17,16 +17,22 @@ export type Story = {
   img: string;
 };
 
+export type BriefStep = { number: number; title: string; timeframe: string; what: string; why: string; signal: string };
 export type IndustryBrief = {
   title: string;
   subtitle: string;
-  whosHiring: { firm: string; role: string; signal: string }[];
-  whatFor: string[];
-  whatItMeans: string;
+  whereYouAre: string;
+  whereYouAreGoing: string;
+  steps: BriefStep[];
+  marketContext: string;
   timing: string;
   investment: string;
   logoKeyword: string;
   image?: string;
+  // legacy fallback fields (older payloads)
+  whosHiring?: { firm: string; role: string; signal: string }[];
+  whatFor?: string[];
+  whatItMeans?: string;
 };
 
 export type Drill = { title: string; theme: string; category: string; questions: string[]; count: number };
