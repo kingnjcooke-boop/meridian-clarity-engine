@@ -5,12 +5,15 @@ import { BottomNav, type Tab } from "./BottomNav";
 import { BriefScreen, PositionScreen } from "./screens-core";
 import { AlertsScreen, NetworkScreen, StoryDetail } from "./screens-alerts-network";
 import { ResourcesScreen, RoadmapScreen, ActionDetail } from "./screens-resources-roadmap";
+import { ChatOverlay } from "./ChatOverlay";
+import { MeridianDataProvider } from "./MeridianDataContext";
 
 type Overlay =
   | { kind: "none" }
   | { kind: "story"; id: number }
   | { kind: "action"; id: number }
-  | { kind: "roadmap" };
+  | { kind: "roadmap" }
+  | { kind: "chat" };
 
 export function MeridianApp() {
   const [user, setUser] = useState<OnboardingData | null>(null);
@@ -22,8 +25,8 @@ export function MeridianApp() {
       {!user ? (
         <Onboarding onDone={(d) => setUser(d)} />
       ) : (
-        <>
-          <div className="flex-1 flex flex-col overflow-hidden">
+        <MeridianDataProvider user={user}>
+          <div className="flex-1 flex flex-col overflow-hidden relative">
             {overlay.kind === "story" && <StoryDetail id={overlay.id} onBack={() => setOverlay({ kind: "none" })} />}
             {overlay.kind === "action" && <ActionDetail id={overlay.id} onBack={() => setOverlay({ kind: "none" })} />}
             {overlay.kind === "roadmap" && <RoadmapScreen onOpenAction={(id) => setOverlay({ kind: "action", id })} onBack={() => setOverlay({ kind: "none" })} />}
@@ -36,9 +39,14 @@ export function MeridianApp() {
                 {tab === "resources" && <ResourcesScreen />}
               </>
             )}
+            {overlay.kind === "chat" && <ChatOverlay user={user} onClose={() => setOverlay({ kind: "none" })} />}
           </div>
-          <BottomNav tab={tab} onChange={(t) => { setOverlay({ kind: "none" }); setTab(t); }} onCenter={() => { setOverlay({ kind: "none" }); setTab("brief"); }} />
-        </>
+          <BottomNav
+            tab={tab}
+            onChange={(t) => { setOverlay({ kind: "none" }); setTab(t); }}
+            onCenter={() => setOverlay(o => o.kind === "chat" ? { kind: "none" } : { kind: "chat" })}
+          />
+        </MeridianDataProvider>
       )}
     </MobileFrame>
   );
