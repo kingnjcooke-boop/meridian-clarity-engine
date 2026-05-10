@@ -7,6 +7,7 @@ import { AlertsScreen, NetworkScreen, StoryDetail } from "./screens-alerts-netwo
 import { ResourcesScreen, RoadmapScreen, ActionDetail, IndustryBriefDetail, DrillDetail } from "./screens-resources-roadmap";
 import { ChatOverlay } from "./ChatOverlay";
 import { RepositionOverlay } from "./RepositionOverlay";
+import { ResumeUpload } from "./ResumeUpload";
 import { MeridianDataProvider } from "./MeridianDataContext";
 
 type Overlay =
@@ -17,6 +18,8 @@ type Overlay =
   | { kind: "industryBrief" }
   | { kind: "roadmap" }
   | { kind: "chat" }
+  | { kind: "position" }
+  | { kind: "resume" }
   | { kind: "reposition" };
 
 export function MeridianApp() {
@@ -28,6 +31,11 @@ export function MeridianApp() {
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
   }, [dark]);
+
+  function openPositionOrResume() {
+    if (!user?.hasResume) setOverlay({ kind: "resume" });
+    else setOverlay({ kind: "position" });
+  }
 
   return (
     <MobileFrame dark={dark}>
@@ -41,10 +49,27 @@ export function MeridianApp() {
             {overlay.kind === "drill" && <DrillDetail idx={overlay.idx} onBack={() => setOverlay({ kind: "none" })} />}
             {overlay.kind === "industryBrief" && <IndustryBriefDetail onBack={() => setOverlay({ kind: "none" })} />}
             {overlay.kind === "roadmap" && <RoadmapScreen onOpenAction={(id) => setOverlay({ kind: "action", id })} onBack={() => setOverlay({ kind: "none" })} />}
+            {overlay.kind === "position" && (
+              <PositionScreen
+                user={user}
+                onReposition={() => setOverlay({ kind: "reposition" })}
+                onUpdateResume={() => setOverlay({ kind: "resume" })}
+                onBack={() => setOverlay({ kind: "none" })}
+              />
+            )}
             {overlay.kind === "none" && (
               <>
-                {tab === "brief" && <BriefScreen user={user} dark={dark} setDark={setDark} onOpenAction={(id) => setOverlay({ kind: "action", id })} onOpenStory={(id) => setOverlay({ kind: "story", id })} onOpenRoadmap={() => setOverlay({ kind: "roadmap" })} />}
-                {tab === "position" && <PositionScreen user={user} onReposition={() => setOverlay({ kind: "reposition" })} />}
+                {tab === "brief" && (
+                  <BriefScreen
+                    user={user}
+                    dark={dark}
+                    setDark={setDark}
+                    onOpenStory={(id) => setOverlay({ kind: "story", id })}
+                    onOpenRoadmap={() => setOverlay({ kind: "roadmap" })}
+                    onOpenChat={() => setOverlay({ kind: "chat" })}
+                    onOpenPosition={openPositionOrResume}
+                  />
+                )}
                 {tab === "alerts" && <AlertsScreen onOpenStory={(id) => setOverlay({ kind: "story", id })} />}
                 {tab === "network" && <NetworkScreen user={user} />}
                 {tab === "resources" && <ResourcesScreen onOpenIndustryBrief={() => setOverlay({ kind: "industryBrief" })} onOpenDrill={(idx) => setOverlay({ kind: "drill", idx })} />}
@@ -52,11 +77,20 @@ export function MeridianApp() {
             )}
             {overlay.kind === "chat" && <ChatOverlay user={user} onClose={() => setOverlay({ kind: "none" })} />}
             {overlay.kind === "reposition" && <RepositionOverlay user={user} onClose={() => setOverlay({ kind: "none" })} onSave={(u) => { setUser(u); setOverlay({ kind: "none" }); }} />}
+            {overlay.kind === "resume" && (
+              <ResumeUpload
+                initial={{ resumeName: user.resumeName }}
+                onCancel={() => setOverlay({ kind: "none" })}
+                onSave={({ resumeName, resumeText }) => {
+                  setUser({ ...user, resumeName, resumeText, hasResume: true });
+                  setOverlay({ kind: "position" });
+                }}
+              />
+            )}
           </div>
           <BottomNav
             tab={tab}
             onChange={(t) => { setOverlay({ kind: "none" }); setTab(t); }}
-            onCenter={() => setOverlay(o => o.kind === "chat" ? { kind: "none" } : { kind: "chat" })}
           />
         </MeridianDataProvider>
       )}

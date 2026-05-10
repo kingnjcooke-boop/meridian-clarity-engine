@@ -46,7 +46,7 @@ export function ResourcesScreen({ onOpenIndustryBrief, onOpenDrill }: { onOpenIn
               <div className="font-serif text-[26px] text-white leading-[1.1] font-light tracking-tight mb-1.5">{brief.title}</div>
               <div className="text-[11px] text-white/70 font-light mb-3">{brief.subtitle}</div>
               <div className="flex items-center gap-3 text-white/85 text-[11px]">
-                <span className="flex items-center gap-1.5"><I.Briefcase width={11} height={11} /> {brief.whosHiring.length} firms hiring</span>
+                <span className="flex items-center gap-1.5"><I.Map width={11} height={11} /> {(brief.steps?.length ?? 0)} step walkthrough</span>
                 <span className="w-1 h-1 rounded-full bg-white/40" />
                 <span className="flex items-center gap-1.5"><I.Clock width={11} height={11} /> {brief.timing}</span>
                 <span className="ml-auto flex items-center gap-1 text-[var(--olo)]">Open <I.ArrowRight width={11} height={11} /></span>
@@ -144,40 +144,54 @@ export function IndustryBriefDetail({ onBack }: { onBack: () => void }) {
           <InfoTile icon={<I.DollarSign width={13} height={13} />} label="Investment" value={b.investment} />
         </div>
 
-        <div>
-          <div className="text-[10px] tracking-[0.18em] uppercase text-ink3 mb-2 flex items-center gap-1.5"><I.Briefcase width={11} height={11} /> Who's hiring</div>
-          <div className="space-y-2">
-            {b.whosHiring.map((h, i) => (
-              <div key={i} className="bg-surface rounded-2xl px-4 py-3 shadow-[0_1px_5px_rgba(0,0,0,0.05)] flex items-start gap-3">
-                <div className="w-9 h-9 rounded-md bg-[var(--olo)]/10 text-[var(--olo)] flex items-center justify-center text-[12px] font-medium tracking-wide">{h.firm.split(/\s+/).map(w => w[0]).slice(0, 2).join("")}</div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[13px] text-ink font-normal">{h.firm}</div>
-                  <div className="text-[11px] text-ink2 font-light">{h.role}</div>
-                  <div className="text-[10px] text-[var(--olo)] mt-0.5 tracking-wide">{h.signal}</div>
+        {b.whereYouAre && (
+          <div className="bg-surface rounded-2xl px-4 py-4 shadow-[0_1px_5px_rgba(0,0,0,0.05)]">
+            <div className="text-[10px] tracking-[0.18em] uppercase text-ink3 mb-1.5">Where you are</div>
+            <p className="text-[13px] text-ink2 leading-relaxed font-light">{b.whereYouAre}</p>
+          </div>
+        )}
+
+        {b.whereYouAreGoing && (
+          <div className="bg-[var(--navy)] rounded-2xl px-4 py-4 text-white">
+            <div className="text-[10px] tracking-[0.18em] uppercase text-white/50 mb-1.5">Where you're going</div>
+            <p className="text-[13px] text-white/90 leading-relaxed font-light">{b.whereYouAreGoing}</p>
+          </div>
+        )}
+
+        {b.steps && b.steps.length > 0 && (
+          <div>
+            <div className="text-[10px] tracking-[0.18em] uppercase text-ink3 mb-2.5 flex items-center gap-1.5"><I.Map width={11} height={11} /> The walkthrough</div>
+            <div className="space-y-2.5 relative">
+              <div className="absolute left-[14px] top-2 bottom-2 w-px bg-[var(--olo)]/25" />
+              {b.steps.map((s) => (
+                <div key={s.number} className="relative pl-10">
+                  <div className="absolute left-0 top-0 w-7 h-7 rounded-full bg-[var(--olo)] text-white flex items-center justify-center text-[11px] font-medium">{s.number}</div>
+                  <div className="bg-surface rounded-2xl px-4 py-3 shadow-[0_1px_5px_rgba(0,0,0,0.05)]">
+                    <div className="flex items-baseline justify-between gap-2 mb-1">
+                      <div className="text-[13px] text-ink font-normal leading-snug">{s.title}</div>
+                      <div className="text-[10px] tracking-wider text-[var(--olo)] flex-shrink-0">{s.timeframe}</div>
+                    </div>
+                    <p className="text-[12px] text-ink2 leading-relaxed font-light mb-1.5">{s.what}</p>
+                    <p className="text-[11px] text-ink3 leading-relaxed font-light italic mb-2">Why · {s.why}</p>
+                    <div className="bg-[var(--olo)]/10 rounded-md px-2.5 py-1.5 text-[11px] text-ink leading-snug font-light">
+                      <span className="text-[var(--olo)] tracking-wide text-[9px] uppercase mr-1.5">Signal</span>{s.signal}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div>
-          <div className="text-[10px] tracking-[0.18em] uppercase text-ink3 mb-2">What they want</div>
-          <ul className="space-y-1.5">
-            {b.whatFor.map((w, i) => (
-              <li key={i} className="flex items-start gap-2 text-[12px] text-ink2 font-light leading-relaxed">
-                <span className="w-1 h-1 rounded-full bg-[var(--olo)] mt-2" /> {w}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="bg-[var(--olo)]/10 border-l-2 border-[var(--olo)] rounded-r-xl px-4 py-3.5">
-          <div className="flex items-center gap-1.5 mb-1.5">
-            <I.Target width={12} height={12} className="text-[var(--olo)]" />
-            <span className="text-[10px] tracking-[0.16em] uppercase text-[var(--olo)] font-medium">What this means for you</span>
+        {b.marketContext && (
+          <div className="bg-[var(--olo)]/10 border-l-2 border-[var(--olo)] rounded-r-xl px-4 py-3.5">
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <I.Target width={12} height={12} className="text-[var(--olo)]" />
+              <span className="text-[10px] tracking-[0.16em] uppercase text-[var(--olo)] font-medium">Market context · right now</span>
+            </div>
+            <p className="text-[13px] text-ink leading-relaxed font-light">{b.marketContext}</p>
           </div>
-          <p className="text-[13px] text-ink leading-relaxed font-light">{b.whatItMeans}</p>
-        </div>
+        )}
       </div>
     </div>
   );

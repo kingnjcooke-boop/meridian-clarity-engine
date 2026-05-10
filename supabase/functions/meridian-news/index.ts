@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: `You are an industry intelligence analyst. Today's date is ${todayStr}. EVERY story you generate must be plausibly published between ${cutoff} and ${todayStr} — i.e. within the last 3 weeks. Never reference older events. Output ONLY tool calls.` },
-          { role: "user", content: `Generate ${count} CURRENT (last 3 weeks only — between ${cutoff} and ${todayStr}) industry-news stories that someone targeting "${target}"${niche ? ` (niche: ${niche})` : ""} (${industry}, ${stage})${employers ? `, watching ${employers}` : ""} should track this week. Each story must be plausible, specific to real firms/agencies/regulations, and tied to events that could realistically have happened in the past 21 days. For each: an editorial headline; tag (REGULATION/HIRING/M&A/POLICY/LITIGATION/MARKET/FUNDING/TECH); 3-4 sentence AI summary referencing recent developments; 2-sentence "impact on positioning" tied to the user's target; urgency badge text + dot color (#ef4444 high, #f59e0b medium, #10b981 watch); thumbnail keyword (single word, e.g. courthouse/capitol/skyline/boardroom/lab/server/factory); age in human format like "2h", "1d", "5d", "2w" — must reflect a date in the last 21 days.` }
+          { role: "user", content: `Generate ${count} CURRENT (last 3 weeks only — between ${cutoff} and ${todayStr}) industry-news stories that someone targeting "${target}"${niche ? ` (niche: ${niche})` : ""} (${industry}, ${stage})${employers ? `, watching ${employers}` : ""} should track this week. Each story must be plausible, specific to real firms/agencies/regulations, and tied to events that could realistically have happened in the past 21 days. For each provide: headline; tag (REGULATION/HIRING/M&A/POLICY/LITIGATION/MARKET/FUNDING/TECH); 3-4 sentence AI summary referencing recent developments; 2-sentence "impact on positioning"; urgency badge text + dot color (#ef4444 high, #f59e0b medium, #10b981 watch); thumbnailKeywords = an array of 2-3 SPECIFIC visual nouns that DIRECTLY depict the story's subject — e.g. for an FTC ruling: ["ftc","federal trade commission","gavel"]; for a Goldman hire: ["goldman sachs","wall street","trading floor"]; for an AI policy update: ["ai chip","data center","capitol"]. Keywords MUST be concrete photographable subjects, NOT abstract terms; age in human format like "2h", "1d", "5d", "2w" — must reflect a date in the last 21 days.` }
         ],
         tools: [{
           type: "function",
@@ -51,10 +51,10 @@ Deno.serve(async (req) => {
                       impact: { type: "string" },
                       badgeText: { type: "string" },
                       badgeDot: { type: "string" },
-                      thumbnailKeyword: { type: "string" },
+                      thumbnailKeywords: { type: "array", items: { type: "string" }, description: "2-3 concrete visual subjects directly depicting the story" },
                       sources: { type: "array", items: { type: "string" } },
                     },
-                    required: ["headline", "tag", "source", "age", "publishedAt", "summary", "impact", "badgeText", "badgeDot", "thumbnailKeyword", "sources"],
+                    required: ["headline", "tag", "source", "age", "publishedAt", "summary", "impact", "badgeText", "badgeDot", "thumbnailKeywords", "sources"],
                   }
                 }
               },
@@ -78,13 +78,17 @@ Deno.serve(async (req) => {
     const cutoffMs = today.getTime() - 21 * 24 * 60 * 60 * 1000;
     const fresh = (args.stories as any[]).filter((s) => {
       const t = Date.parse(s.publishedAt || "");
-      return !isNaN(t) ? t >= cutoffMs : true; // keep if unparsable but model was instructed
+      return !isNaN(t) ? t >= cutoffMs : true;
     });
-    const stories = fresh.map((s: any, i: number) => ({
-      ...s,
-      id: i,
-      img: `https://loremflickr.com/800/520/${encodeURIComponent(s.thumbnailKeyword)}?lock=${i + Date.now() % 1000}`,
-    }));
+    const stories = fresh.map((s: any, i: number) => {
+      const kws: string[] = Array.isArray(s.thumbnailKeywords) && s.thumbnailKeywords.length
+        ? s.thumbnailKeywords
+        : [s.thumbnailKeyword || s.tag || "news"];
+      // Unsplash featured photos endpoint — relevant photo for the comma-separated subject keywords
+      const query = kws.map((k) => String(k).trim().toLowerCase().replace(/[^a-z0-9 ]/g, "")).filter(Boolean).join(",");
+      const img = `https://source.unsplash.com/featured/800x520/?${encodeURIComponent(query || "news")}&sig=${i}-${Date.now() % 1000}`;
+      return { ...s, id: i, img };
+    });
 
     return new Response(JSON.stringify({ stories }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {

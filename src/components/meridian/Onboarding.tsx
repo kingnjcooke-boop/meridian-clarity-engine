@@ -11,6 +11,9 @@ export type OnboardingData = {
   current: string;
   target: string;
   employers: string[];
+  hasResume?: boolean;
+  resumeName?: string;
+  resumeText?: string;
 };
 
 const INDUSTRIES = [
