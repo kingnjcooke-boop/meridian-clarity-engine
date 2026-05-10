@@ -46,7 +46,7 @@ export function ResourcesScreen({ onOpenIndustryBrief, onOpenDrill }: { onOpenIn
               <div className="font-serif text-[26px] text-white leading-[1.1] font-light tracking-tight mb-1.5">{brief.title}</div>
               <div className="text-[11px] text-white/70 font-light mb-3">{brief.subtitle}</div>
               <div className="flex items-center gap-3 text-white/85 text-[11px]">
-                <span className="flex items-center gap-1.5"><I.Briefcase width={11} height={11} /> {brief.whosHiring.length} firms hiring</span>
+                <span className="flex items-center gap-1.5"><I.Map width={11} height={11} /> {(brief.steps?.length ?? 0)} step walkthrough</span>
                 <span className="w-1 h-1 rounded-full bg-white/40" />
                 <span className="flex items-center gap-1.5"><I.Clock width={11} height={11} /> {brief.timing}</span>
                 <span className="ml-auto flex items-center gap-1 text-[var(--olo)]">Open <I.ArrowRight width={11} height={11} /></span>
