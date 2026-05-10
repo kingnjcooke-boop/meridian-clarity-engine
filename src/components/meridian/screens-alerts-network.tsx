@@ -7,6 +7,7 @@ import type { OnboardingData } from "./Onboarding";
 // ─── ALERTS ───
 export function AlertsScreen({ onOpenStory }: { onOpenStory: (id: number) => void }) {
   const [filter, setFilter] = useState<"all" | "high" | "watch">("all");
+  const { stories, storiesLoading, storiesError, refreshStories } = useMeridianData();
 
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar fade-in pb-6">
