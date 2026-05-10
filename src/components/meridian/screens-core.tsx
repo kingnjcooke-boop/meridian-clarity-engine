@@ -207,7 +207,7 @@ export function SecRow({ label, link, onLink }: { label: string; link?: string; 
 }
 
 // ─── POSITION SCREEN ───
-export function PositionScreen({ user, onReposition }: { user: OnboardingData; onReposition: () => void }) {
+export function PositionScreen({ user, onReposition, onUpdateResume, onBack }: { user: OnboardingData; onReposition: () => void; onUpdateResume: () => void; onBack: () => void }) {
   const [score, setScore] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
@@ -218,7 +218,12 @@ export function PositionScreen({ user, onReposition }: { user: OnboardingData; o
 
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar fade-in pb-4">
-      <div className="flex justify-between items-start px-5 pt-3 pb-2">
+      <div className="flex items-center gap-2 px-5 pt-3 pb-1">
+        <button onClick={onBack} className="w-9 h-9 rounded-md bg-black/[0.04] dark:bg-white/[0.06] flex items-center justify-center text-ink2"><I.ChevronLeft width={16} height={16} /></button>
+        <div className="flex-1 text-center text-[10px] tracking-[0.22em] uppercase text-ink3">Position</div>
+        <button onClick={onUpdateResume} className="text-[10px] tracking-[0.14em] uppercase text-[var(--olo)] hover:underline">Resume</button>
+      </div>
+      <div className="flex justify-between items-start px-5 pt-2 pb-2">
         <div className="relative">
           <div className="text-[10px] tracking-[0.16em] uppercase text-ink3 font-light">Positioning for</div>
           <button onClick={() => setMenuOpen(o => !o)} className="font-serif text-[22px] text-ink mt-0.5 flex items-center gap-1.5 font-light text-left">
