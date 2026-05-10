@@ -34,8 +34,16 @@ export function BriefScreen({ user, dark, setDark, onOpenStory, onOpenRoadmap, o
   const firstName = user.name || "Alex";
   const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
   const [scrollIdx, setScrollIdx] = useState(0);
-  const { stories } = useMeridianData();
+  const { stories, scoreData, scoreLoading } = useMeridianData();
   const carouselStories = stories.length ? stories : (STORIES as any);
+
+  const hasScore = user.hasResume && scoreData;
+  const scoreStr = hasScore ? String(scoreData!.score) : (scoreLoading ? "…" : "—");
+  const scoreSub = hasScore ? scoreData!.percentile : (scoreLoading ? "Scoring" : user.hasResume ? "Calibrating" : "Locked");
+  const trendStr = hasScore ? (scoreData!.trend >= 0 ? `+${scoreData!.trend}` : `${scoreData!.trend}`) : "—";
+  const trendSub = hasScore ? scoreData!.trendLabel : "7-Day";
+  const gapsStr = hasScore ? String(scoreData!.gapsCount) : "—";
+  const gapsSub = hasScore ? scoreData!.gapsPriority : "Gaps";
 
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar fade-in pb-2">
@@ -61,26 +69,28 @@ export function BriefScreen({ user, dark, setDark, onOpenStory, onOpenRoadmap, o
       </div>
 
       {/* Free greeting */}
-      <div className="px-5 pt-4 pb-3">
+      <div className="px-5 pt-4 pb-1">
         <h1 className="text-[34px] leading-[1.05] font-semibold tracking-tight text-ink" style={{ fontFamily: "var(--font-sans)" }}>
           {greetingFor(firstName)}
         </h1>
         <p className="text-[12.5px] text-ink2 mt-1 font-light">Here's where you stand today.</p>
       </div>
 
-      {/* Compass dashboard widget */}
-      <div className="px-5">
+      {/* Floating compass — no container, just the widget */}
+      <div className="pt-2 pb-1">
         <MeridianCompass
           onClick={onOpenPosition}
           locked={!user.hasResume}
-          score={user.hasResume ? "81" : "—"}
-          scoreSub={user.hasResume ? "Top 14%" : "Locked"}
-          trend={user.hasResume ? "+6" : "—"}
-          trendSub={user.hasResume ? "↑ Improving" : "Pending"}
-          gaps={user.hasResume ? "2" : "—"}
-          gapsSub={user.hasResume ? "High Priority" : "Calibrating"}
+          score={scoreStr}
+          scoreSub={scoreSub}
+          trend={trendStr}
+          trendSub={trendSub}
+          gaps={gapsStr}
+          gapsSub={gapsSub}
         />
-        <div className="text-center text-[10px] tracking-[0.18em] uppercase text-ink3 mt-3 font-light">Tap compass to open Position</div>
+        {hasScore && scoreData!.summary && (
+          <p className="px-7 text-center text-[11.5px] text-ink2 mt-1 font-light leading-relaxed max-w-[320px] mx-auto">{scoreData!.summary}</p>
+        )}
       </div>
 
       {/* Stories */}
