@@ -9,6 +9,7 @@ export type Story = {
   tag: string;
   source: string;
   age: string;
+  publishedAt?: string;
   summary: string;
   impact: string;
   badge: { dot: string; text: string };
@@ -16,10 +17,27 @@ export type Story = {
   img: string;
 };
 
+export type IndustryBrief = {
+  title: string;
+  subtitle: string;
+  whosHiring: { firm: string; role: string; signal: string }[];
+  whatFor: string[];
+  whatItMeans: string;
+  timing: string;
+  investment: string;
+  logoKeyword: string;
+  image?: string;
+};
+
+export type Drill = { title: string; theme: string; category: string; questions: string[]; count: number };
+export type Resume = { name: string; desc: string; tag: string; templateUrl: string };
+export type Article = { title: string; readTime: string; source: string; summary: string; whyItMatters: string; articleUrl: string };
+
 export type Resources = {
-  resumes: { name: string; desc: string; tag: string }[];
-  drills: { title: string; count: number; theme: string }[];
-  articles: { title: string; readTime: string; source: string; summary: string; whyItMatters: string }[];
+  resumes: Resume[];
+  drills: Drill[];
+  articles: Article[];
+  industryBrief?: IndustryBrief;
 };
 
 type Ctx = {
@@ -45,48 +63,33 @@ export function MeridianDataProvider({ user, children }: { user: OnboardingData;
   const [resourcesError, setResourcesError] = useState<string | null>(null);
 
   async function fetchStories() {
-    setStoriesLoading(true);
-    setStoriesError(null);
+    setStoriesLoading(true); setStoriesError(null);
     try {
       const { data, error } = await supabase.functions.invoke("meridian-news", { body: { profile: user, count: 6 } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       const mapped: Story[] = (data.stories || []).map((s: any, i: number) => ({
-        id: i,
-        headline: s.headline,
-        tag: s.tag,
-        source: s.source,
-        age: s.age,
-        summary: s.summary,
-        impact: s.impact,
-        badge: { dot: s.badgeDot, text: s.badgeText },
-        confirmedBy: s.sources || [],
-        img: s.img,
+        id: i, headline: s.headline, tag: s.tag, source: s.source, age: s.age, publishedAt: s.publishedAt,
+        summary: s.summary, impact: s.impact, badge: { dot: s.badgeDot, text: s.badgeText },
+        confirmedBy: s.sources || [], img: s.img,
       }));
       if (mapped.length) setStories(mapped);
-    } catch (e: any) {
-      setStoriesError(e.message || "Failed to load stories");
-    } finally {
-      setStoriesLoading(false);
-    }
+    } catch (e: any) { setStoriesError(e.message || "Failed to load stories"); }
+    finally { setStoriesLoading(false); }
   }
 
   async function fetchResources() {
-    setResourcesLoading(true);
-    setResourcesError(null);
+    setResourcesLoading(true); setResourcesError(null);
     try {
       const { data, error } = await supabase.functions.invoke("meridian-resources", { body: { profile: user } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResources(data);
-    } catch (e: any) {
-      setResourcesError(e.message || "Failed to load resources");
-    } finally {
-      setResourcesLoading(false);
-    }
+    } catch (e: any) { setResourcesError(e.message || "Failed to load resources"); }
+    finally { setResourcesLoading(false); }
   }
 
-  useEffect(() => { fetchStories(); fetchResources(); /* eslint-disable-next-line */ }, [user.industry, user.target, user.current]);
+  useEffect(() => { fetchStories(); fetchResources(); /* eslint-disable-next-line */ }, [user.industry, user.target, user.current, user.niche, JSON.stringify(user.employers)]);
 
   return (
     <MeridianDataCtx.Provider value={{ stories, storiesLoading, storiesError, refreshStories: fetchStories, resources, resourcesLoading, resourcesError, refreshResources: fetchResources }}>
