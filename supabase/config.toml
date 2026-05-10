@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.meridian-personalize]
 verify_jwt = false
+
+[functions.meridian-score]
+verify_jwt = false

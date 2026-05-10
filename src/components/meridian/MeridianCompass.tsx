@@ -1,5 +1,5 @@
-// Decorative compass dashboard widget — three stat callouts at N/E/S compass positions.
-// Click anywhere on the card to open Position. West is intentionally negative space.
+// Floating compass widget — small, no colored container, just a delicate SVG
+// compass with three tiny stat callouts. Tap to open Position.
 
 type Props = {
   score?: string;
@@ -13,89 +13,68 @@ type Props = {
 };
 
 export function MeridianCompass({
-  score = "81",
-  scoreSub = "Top 14%",
-  trend = "+6",
-  trendSub = "↑ Improving",
-  gaps = "2",
-  gapsSub = "High Priority",
+  score = "—",
+  scoreSub = "Score",
+  trend = "—",
+  trendSub = "7-Day",
+  gaps = "—",
+  gapsSub = "Gaps",
   onClick,
   locked,
 }: Props) {
-  const teal = "#1D9E75";
-  const teal100 = "#9FE1CB";
-  const teal200 = "#5DCAA5";
-  const amber = "#FAC775";
-  const amber200 = "#EF9F27";
-  const gray = "#5F5E5A";
+  const stroke = "currentColor";
+  const size = 200;
 
   return (
     <button
       onClick={onClick}
-      className="block w-full max-w-[380px] mx-auto text-left rounded-3xl relative overflow-hidden active:scale-[0.995] transition"
-      style={{ background: "#04342C", aspectRatio: "1 / 1" }}
+      className="block mx-auto text-left relative group text-ink2"
+      style={{ width: size, height: size }}
+      aria-label="Open positioning"
     >
-      {/* Compass rose SVG */}
-      <svg viewBox="0 0 380 380" className="absolute inset-0 w-full h-full pointer-events-none">
-        {/* Concentric rings */}
-        <circle cx="190" cy="190" r="124" fill="none" stroke={teal} strokeOpacity="0.15" strokeWidth="1" />
-        <circle cx="190" cy="190" r="105" fill="none" stroke={teal} strokeOpacity="0.15" strokeWidth="1" />
-        {/* Dashed crosshair */}
-        <line x1="190" y1="40" x2="190" y2="340" stroke={teal} strokeOpacity="0.2" strokeWidth="1" strokeDasharray="3 5" />
-        <line x1="40" y1="190" x2="340" y2="190" stroke={teal} strokeOpacity="0.2" strokeWidth="1" strokeDasharray="3 5" />
-        {/* 8 cardinal tick marks on outer ring */}
+      <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full">
+        <g stroke={stroke} fill="none" strokeWidth="0.7" opacity="0.55">
+          <circle cx="100" cy="100" r="68" />
+          <circle cx="100" cy="100" r="56" opacity="0.5" />
+        </g>
+        <g stroke={stroke} strokeWidth="0.6" opacity="0.35" strokeDasharray="2 4">
+          <line x1="100" y1="22" x2="100" y2="178" />
+          <line x1="22" y1="100" x2="178" y2="100" />
+        </g>
         {Array.from({ length: 8 }).map((_, i) => {
           const a = (i * Math.PI) / 4;
-          const r1 = 124, r2 = 132;
-          const x1 = 190 + Math.cos(a) * r1;
-          const y1 = 190 + Math.sin(a) * r1;
-          const x2 = 190 + Math.cos(a) * r2;
-          const y2 = 190 + Math.sin(a) * r2;
-          return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={teal} strokeOpacity="0.4" strokeWidth="1.4" />;
+          const r1 = 68, r2 = 74;
+          return (
+            <line
+              key={i}
+              x1={100 + Math.cos(a) * r1}
+              y1={100 + Math.sin(a) * r1}
+              x2={100 + Math.cos(a) * r2}
+              y2={100 + Math.sin(a) * r2}
+              stroke={stroke}
+              strokeWidth="1"
+              opacity="0.6"
+            />
+          );
         })}
-        {/* Compass needle: north (teal), south (gray) */}
-        <polygon points="190,80 196,190 184,190" fill={teal} />
-        <polygon points="190,300 196,190 184,190" fill={gray} />
-        {/* Pivot */}
-        <circle cx="190" cy="190" r="6" fill="#04342C" stroke={teal} strokeWidth="2" />
-        {/* Dashed connector lines from pivot to each stat */}
-        <line x1="190" y1="190" x2="190" y2="78" stroke={teal} strokeOpacity="0.25" strokeWidth="1" strokeDasharray="2 4" />
-        <line x1="190" y1="190" x2="302" y2="190" stroke={teal} strokeOpacity="0.25" strokeWidth="1" strokeDasharray="2 4" />
-        <line x1="190" y1="190" x2="190" y2="302" stroke={amber} strokeOpacity="0.25" strokeWidth="1" strokeDasharray="2 4" />
+        {/* Needle */}
+        <polygon points="100,40 104,100 96,100" fill="var(--olo)" />
+        <polygon points="100,160 104,100 96,100" fill="currentColor" opacity="0.25" />
+        <circle cx="100" cy="100" r="3.5" fill="var(--background)" stroke="var(--olo)" strokeWidth="1.2" />
       </svg>
 
       {/* North — Score */}
-      <Pill
-        style={{ top: "8%", left: "50%", transform: "translateX(-50%)", background: "rgba(29, 158, 117, 0.15)", border: "1px solid rgba(29,158,117,0.3)" }}
-        n={score} nColor="#FFFFFF" label="Score" labelColor={teal100} sub={scoreSub} subColor={teal200}
-      />
-
-      {/* East — 7-Day */}
-      <Pill
-        style={{ top: "50%", right: "4%", transform: "translateY(-50%)", background: "rgba(29, 158, 117, 0.15)", border: "1px solid rgba(29,158,117,0.3)" }}
-        n={trend} nColor="#FFFFFF" label="7-Day" labelColor={teal100} sub={trendSub} subColor={teal200}
-      />
-
-      {/* South — Active Gaps */}
-      <Pill
-        style={{ bottom: "12%", left: "50%", transform: "translateX(-50%)", background: "rgba(239, 159, 39, 0.12)", border: "1px solid rgba(239,159,39,0.25)" }}
-        n={gaps} nColor={amber} label="Active Gaps" labelColor={amber} sub={gapsSub} subColor={amber200}
-      />
-
-      {/* Wordmark */}
-      <div
-        className="absolute bottom-2 inset-x-0 text-center"
-        style={{ color: teal200, opacity: 0.5, letterSpacing: "0.25em", fontSize: 10, fontWeight: 500 }}
-      >
-        MERIDIAN
-      </div>
+      <Stat style={{ top: -4, left: "50%", transform: "translateX(-50%)" }} n={score} sub={scoreSub} accent />
+      {/* East — Trend */}
+      <Stat style={{ top: "50%", right: -10, transform: "translateY(-50%)" }} n={trend} sub={trendSub} />
+      {/* South — Gaps */}
+      <Stat style={{ bottom: -4, left: "50%", transform: "translateX(-50%)" }} n={gaps} sub={gapsSub} warn />
 
       {locked && (
-        <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(4,52,44,0.85)", backdropFilter: "blur(2px)" }}>
-          <div className="text-center px-6">
-            <div style={{ color: teal200, fontSize: 10, letterSpacing: "0.22em" }} className="uppercase mb-2">Locked</div>
-            <div className="font-serif text-white text-[22px] leading-tight font-light">Upload your resume<br/>to unlock your score.</div>
-            <div className="text-[11px] mt-2" style={{ color: teal100 }}>Tap to add resume →</div>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-[9px] tracking-[0.22em] uppercase text-ink3">Locked</div>
+            <div className="text-[11px] text-ink2 mt-0.5 font-light">Tap to add resume</div>
           </div>
         </div>
       )}
@@ -103,15 +82,12 @@ export function MeridianCompass({
   );
 }
 
-function Pill({ style, n, nColor, label, labelColor, sub, subColor }: any) {
+function Stat({ style, n, sub, accent, warn }: any) {
+  const color = warn ? "var(--ember, #EF9F27)" : accent ? "var(--olo)" : "currentColor";
   return (
-    <div
-      className="absolute rounded-2xl px-3.5 py-2 text-center"
-      style={{ ...style, minWidth: 96, backdropFilter: "blur(4px)" }}
-    >
-      <div style={{ color: nColor, fontSize: 32, fontWeight: 600, lineHeight: 1, fontFamily: "var(--font-sans)" }} className="tabular-nums">{n}</div>
-      <div style={{ color: labelColor, fontSize: 12, fontWeight: 400, marginTop: 4 }}>{label}</div>
-      <div style={{ color: subColor, fontSize: 11, fontWeight: 400, marginTop: 1 }}>{sub}</div>
+    <div className="absolute text-center" style={{ ...style, minWidth: 56 }}>
+      <div className="tabular-nums leading-none" style={{ color, fontSize: 18, fontWeight: 600, fontFamily: "var(--font-sans)" }}>{n}</div>
+      <div className="text-[9px] tracking-[0.16em] uppercase mt-0.5 text-ink3">{sub}</div>
     </div>
   );
 }
