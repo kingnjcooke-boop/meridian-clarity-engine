@@ -86,7 +86,7 @@ export function MeridianDataProvider({ user, children }: { user: OnboardingData;
     }
   }
 
-  useEffect(() => { fetchStories(); fetchResources(); /* eslint-disable-next-line */ }, [user.industry, user.target, user.stage]);
+  useEffect(() => { fetchStories(); fetchResources(); /* eslint-disable-next-line */ }, [user.industry, user.target, user.current]);
 
   return (
     <MeridianDataCtx.Provider value={{ stories, storiesLoading, storiesError, refreshStories: fetchStories, resources, resourcesLoading, resourcesError, refreshResources: fetchResources }}>
