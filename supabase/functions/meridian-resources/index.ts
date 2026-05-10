@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
 
     const target = profile?.target || "regulatory law in D.C.";
     const industry = profile?.industry || "law";
-    const stage = profile?.stage || "early career";
+    const stage = profile?.current || "early career";
 
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

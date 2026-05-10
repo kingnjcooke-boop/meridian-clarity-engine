@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     const sys = profile
-      ? `${SYSTEM}\n\nUser profile: industry=${profile.industry || "?"}, stage=${profile.stage || "?"}, target=${profile.target || "?"}.`
+      ? `${SYSTEM}\n\nUser profile: industry=${profile.industry || "?"}, stage=${profile.current || "?"}, target=${profile.target || "?"}.`
       : SYSTEM;
 
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
