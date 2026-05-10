@@ -198,6 +198,34 @@ function NicheStep({ loading, niches, value, onSelect }: { loading: boolean; nic
   );
 }
 
+function CurrentStep({ value, onChange, onNext }: { value: string; onChange: (v: string) => void; onNext: () => void }) {
+  return (
+    <div className="flex-1 flex flex-col">
+      <div className="text-[10px] tracking-[0.2em] uppercase text-ink3 mb-3">Calibrating</div>
+      <h2 className="font-serif text-[28px] leading-[1.1] text-ink font-light mb-2">Where are you today?</h2>
+      <p className="text-[12px] text-ink3 mb-5 font-light">Be specific — "2L at Georgetown Law focused on admin", "SWE-II at Stripe", "PM Associate at a Series B fintech". The detail sharpens every screen that follows.</p>
+      <input
+        autoFocus
+        list="stage-suggestions"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder="e.g. 2L at Georgetown Law, admin law focus"
+        className="font-serif text-[20px] bg-transparent border-b border-black/10 dark:border-white/15 pb-3 outline-none focus:border-[var(--olo)] transition placeholder:text-ink3/50 text-ink"
+      />
+      <datalist id="stage-suggestions">
+        {STAGES.map(s => <option key={s} value={s} />)}
+      </datalist>
+      <div className="flex flex-wrap gap-2 mt-4">
+        {STAGES.slice(0, 6).map(s => (
+          <button key={s} onClick={() => onChange(s)} className="text-[11px] px-3 py-1.5 rounded-full border border-black/[0.07] dark:border-white/10 text-ink2 bg-surface hover:border-[var(--olo)] hover:text-[var(--olo)] transition">{s}</button>
+        ))}
+      </div>
+      <div className="flex-1" />
+      <button disabled={!value.trim()} onClick={onNext} className="w-full bg-[var(--navy)] text-white py-4 rounded-2xl text-[12px] tracking-[0.16em] uppercase disabled:opacity-30 transition mt-6">Continue</button>
+    </div>
+  );
+}
+
 function TargetStep({ examples, value, onChange, onNext }: { examples: string[]; value: string; onChange: (v: string) => void; onNext: () => void }) {
   return (
     <div className="flex-1 flex flex-col">

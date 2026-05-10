@@ -89,6 +89,33 @@ export function ResourcesScreen({ onOpenIndustryBrief, onOpenDrill }: { onOpenIn
         ))}
       </div>
 
+      {resources?.lexicon && resources.lexicon.length > 0 && (
+        <>
+          <SecRow label="Insider Lexicon" />
+          <div className="px-5">
+            <div className="bg-surface rounded-2xl shadow-[0_1px_5px_rgba(0,0,0,0.05)] overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-black/[0.05] dark:border-white/10 flex items-center gap-2">
+                <I.Sparkles width={11} height={11} className="text-[var(--olo)]" />
+                <div className="text-[10px] tracking-[0.18em] uppercase text-ink3">What insiders know · {resources.lexicon.length} terms</div>
+              </div>
+              <div className="divide-y divide-black/[0.04] dark:divide-white/[0.06]">
+                {resources.lexicon.map((l, i) => (
+                  <details key={i} className="px-4 py-2 group">
+                    <summary className="cursor-pointer list-none flex items-baseline gap-2">
+                      <span className="font-serif italic text-[13.5px] text-ink leading-snug flex-shrink-0">{l.term}</span>
+                      <span className="text-[11px] text-ink3 font-light truncate flex-1">— {l.definition}</span>
+                    </summary>
+                    <div className="mt-1.5 ml-1 pl-2.5 text-[11.5px] text-ink2 font-light leading-relaxed border-l-2 border-[var(--olo)]/40">
+                      <span className="text-[var(--olo)] tracking-wider text-[9px] uppercase mr-1.5">Why it matters</span>{l.whyItMatters}
+                    </div>
+                  </details>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
       <SecRow label="AI-Sourced Articles" link="More" />
       <div className="px-5 space-y-2">
         {resources?.articles.map((a) => (
