@@ -116,7 +116,7 @@ export function StoryDetail({ id, onBack }: { id: number; onBack: () => void }) 
         <div>
           <div className="text-[10px] tracking-[0.18em] uppercase text-ink3 mb-2">Sources confirming</div>
           <div className="space-y-1.5">
-            {s.confirmedBy.map((src) => (
+            {s.confirmedBy.map((src: string) => (
               <div key={src} className="flex items-center gap-2.5 px-3 py-2.5 bg-surface rounded-xl border border-black/[0.05]">
                 <I.Globe width={13} height={13} className="text-ink3" />
                 <span className="text-[12px] text-ink2 flex-1 font-light">{src}</span>
