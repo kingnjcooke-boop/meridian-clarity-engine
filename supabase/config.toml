@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.meridian-resources]
 verify_jwt = false
+
+[functions.meridian-personalize]
+verify_jwt = false
