@@ -34,8 +34,16 @@ export function BriefScreen({ user, dark, setDark, onOpenStory, onOpenRoadmap, o
   const firstName = user.name || "Alex";
   const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
   const [scrollIdx, setScrollIdx] = useState(0);
-  const { stories } = useMeridianData();
+  const { stories, scoreData, scoreLoading } = useMeridianData();
   const carouselStories = stories.length ? stories : (STORIES as any);
+
+  const hasScore = user.hasResume && scoreData;
+  const scoreStr = hasScore ? String(scoreData!.score) : (scoreLoading ? "…" : "—");
+  const scoreSub = hasScore ? scoreData!.percentile : (scoreLoading ? "Scoring" : user.hasResume ? "Calibrating" : "Locked");
+  const trendStr = hasScore ? (scoreData!.trend >= 0 ? `+${scoreData!.trend}` : `${scoreData!.trend}`) : "—";
+  const trendSub = hasScore ? scoreData!.trendLabel : "7-Day";
+  const gapsStr = hasScore ? String(scoreData!.gapsCount) : "—";
+  const gapsSub = hasScore ? scoreData!.gapsPriority : "Gaps";
 
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar fade-in pb-2">
@@ -61,26 +69,28 @@ export function BriefScreen({ user, dark, setDark, onOpenStory, onOpenRoadmap, o
       </div>
 
       {/* Free greeting */}
-      <div className="px-5 pt-4 pb-3">
+      <div className="px-5 pt-4 pb-1">
         <h1 className="text-[34px] leading-[1.05] font-semibold tracking-tight text-ink" style={{ fontFamily: "var(--font-sans)" }}>
           {greetingFor(firstName)}
         </h1>
         <p className="text-[12.5px] text-ink2 mt-1 font-light">Here's where you stand today.</p>
       </div>
 
-      {/* Compass dashboard widget */}
-      <div className="px-5">
+      {/* Floating compass — no container, just the widget */}
+      <div className="pt-2 pb-1">
         <MeridianCompass
           onClick={onOpenPosition}
           locked={!user.hasResume}
-          score={user.hasResume ? "81" : "—"}
-          scoreSub={user.hasResume ? "Top 14%" : "Locked"}
-          trend={user.hasResume ? "+6" : "—"}
-          trendSub={user.hasResume ? "↑ Improving" : "Pending"}
-          gaps={user.hasResume ? "2" : "—"}
-          gapsSub={user.hasResume ? "High Priority" : "Calibrating"}
+          score={scoreStr}
+          scoreSub={scoreSub}
+          trend={trendStr}
+          trendSub={trendSub}
+          gaps={gapsStr}
+          gapsSub={gapsSub}
         />
-        <div className="text-center text-[10px] tracking-[0.18em] uppercase text-ink3 mt-3 font-light">Tap compass to open Position</div>
+        {hasScore && scoreData!.summary && (
+          <p className="px-7 text-center text-[11.5px] text-ink2 mt-1 font-light leading-relaxed max-w-[320px] mx-auto">{scoreData!.summary}</p>
+        )}
       </div>
 
       {/* Stories */}
@@ -208,13 +218,15 @@ export function SecRow({ label, link, onLink }: { label: string; link?: string; 
 
 // ─── POSITION SCREEN ───
 export function PositionScreen({ user, onReposition, onUpdateResume, onBack }: { user: OnboardingData; onReposition: () => void; onUpdateResume: () => void; onBack: () => void }) {
+  const { scoreData } = useMeridianData();
+  const target = scoreData?.score ?? 0;
   const [score, setScore] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
     let v = 0;
-    const t = setInterval(() => { v = Math.min(v + 2, 81); setScore(v); if (v >= 81) clearInterval(t); }, 18);
+    const t = setInterval(() => { v = Math.min(v + 2, target); setScore(v); if (v >= target) clearInterval(t); }, 18);
     return () => clearInterval(t);
-  }, [user.target]);
+  }, [target]);
 
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar fade-in pb-4">
@@ -262,7 +274,7 @@ export function PositionScreen({ user, onReposition, onUpdateResume, onBack }: {
         <div className="flex items-center gap-3.5 mt-2 flex-wrap">
           <div className="inline-flex items-center gap-1.5 bg-[var(--olo-dim)] border border-[var(--olo)]/30 rounded-full px-2.5 py-1">
             <I.TrendUp width={10} height={10} className="text-[var(--olo)]" />
-            <span className="text-[11px] text-[var(--olo)] tracking-wide">Top 14%</span>
+            <span className="text-[11px] text-[var(--olo)] tracking-wide">{scoreData?.percentile || "—"}</span>
           </div>
           <svg width="84" height="28" viewBox="0 0 84 28">
             <polyline points="0,24 14,18 28,21 42,11 56,7 70,3 84,1" fill="none" stroke="rgba(198,139,78,.45)" strokeWidth="1.2" strokeLinecap="round" />
@@ -270,10 +282,9 @@ export function PositionScreen({ user, onReposition, onUpdateResume, onBack }: {
           </svg>
         </div>
         <div className="text-[11px] text-white/40 mt-1.5 font-light leading-relaxed">Among {user.current || "early-career"} targeting {user.target || "your market"}</div>
-        <div className="flex items-center gap-1.5 mt-2">
-          <I.ArrowUp width={10} height={10} className="text-[var(--olo)]/75" />
-          <span className="text-[11px] text-[var(--olo)]/80 tracking-wide">Market Momentum · Strengthening</span>
-        </div>
+        {scoreData?.summary && (
+          <div className="text-[12px] text-white/70 mt-3 font-light leading-relaxed">{scoreData.summary}</div>
+        )}
         {user.employers.length > 0 && (
           <div className="flex items-center gap-1.5 mt-3.5 flex-wrap">
             <span className="text-[10px] text-white/30 tracking-wider">Watching</span>
@@ -283,23 +294,26 @@ export function PositionScreen({ user, onReposition, onUpdateResume, onBack }: {
             {user.employers.length > 5 && <span className="text-[10px] text-white/40">+{user.employers.length - 5}</span>}
           </div>
         )}
-        <div className="flex mt-4 pt-3.5 border-t border-white/[0.07]">
-          <div className="flex-1">
-            <div className="text-[9px] uppercase tracking-[0.16em] text-white/30">Hiring Climate</div>
-            <div className="text-[12px] text-white/60 mt-0.5 font-light">{user.niche || "Privacy & investigations"} ↑</div>
-          </div>
-          <div className="flex-1 pl-4 ml-4 border-l border-white/[0.07]">
-            <div className="text-[9px] uppercase tracking-[0.16em] text-white/30">Opportunity Window</div>
-            <div className="text-[12px] text-white/60 mt-0.5 font-light">Now – Early Summer</div>
-          </div>
-        </div>
       </div>
+
+      {scoreData?.strengths?.length ? (
+        <>
+          <SecRow label="What's working" />
+          <div className="px-5 space-y-1.5">
+            {scoreData.strengths.map((s, i) => (
+              <div key={i} className="flex gap-2 text-[12.5px] text-ink2 font-light"><I.Check width={13} height={13} className="text-emerald-600 mt-0.5 flex-shrink-0" />{s}</div>
+            ))}
+          </div>
+        </>
+      ) : null}
 
       <SecRow label="Gaps Snapshot" link="See all" />
       <div className="space-y-2 px-5">
-        <GapCard icon={<I.FileText width={13} height={13} />} title="Experience Depth" pts="+18" sub={`Need 1 more high-impact ${user.niche || "regulatory"} matter`} w={72} />
-        <GapCard icon={<I.Radio width={13} height={13} />} title="Technical Signals" pts="+12" sub="Add a domain project to strengthen" w={50} />
-        <GapCard icon={<I.Users width={13} height={13} />} title="Access & Network" pts="+10" sub={`Warm intro at ${user.employers[0] || "a top firm"} would unlock referral`} w={38} />
+        {scoreData?.gaps?.length
+          ? scoreData.gaps.map((g, i) => (
+              <GapCard key={i} icon={<I.Target width={13} height={13} />} title={g.title} pts={g.severity} sub={g.why + " · " + g.nextAction} w={g.severity === "Critical" ? 80 : g.severity === "High" ? 60 : 40} />
+            ))
+          : <div className="text-[12px] text-ink3 font-light px-1">{user.hasResume ? "Calibrating gaps…" : "Upload your resume to see gaps."}</div>}
       </div>
     </div>
   );

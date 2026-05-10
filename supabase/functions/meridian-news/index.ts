@@ -84,9 +84,10 @@ Deno.serve(async (req) => {
       const kws: string[] = Array.isArray(s.thumbnailKeywords) && s.thumbnailKeywords.length
         ? s.thumbnailKeywords
         : [s.thumbnailKeyword || s.tag || "news"];
-      // Unsplash featured photos endpoint — relevant photo for the comma-separated subject keywords
-      const query = kws.map((k) => String(k).trim().toLowerCase().replace(/[^a-z0-9 ]/g, "")).filter(Boolean).join(",");
-      const img = `https://source.unsplash.com/featured/800x520/?${encodeURIComponent(query || "news")}&sig=${i}-${Date.now() % 1000}`;
+      // loremflickr returns a real Flickr CC photo matching the tags.
+      // source.unsplash.com was deprecated in 2024 and now returns blank.
+      const tags = kws.map((k) => String(k).trim().toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, "-")).filter(Boolean).slice(0, 3).join(",");
+      const img = `https://loremflickr.com/800/520/${encodeURIComponent(tags || "news")}?lock=${(Date.now() % 9999) + i}`;
       return { ...s, id: i, img };
     });
 
