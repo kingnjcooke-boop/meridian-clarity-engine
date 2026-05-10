@@ -1,30 +1,36 @@
 import { I } from "./icons";
 import { ACTIONS, SecRow } from "./screens-core";
+import { useMeridianData } from "./MeridianDataContext";
 
-// ─── RESOURCES ───
+const themeMap: Record<string, string> = {
+  navy: "from-[var(--navy)] to-[var(--navy)]/80",
+  olo: "from-[var(--olo)]/90 to-[var(--olo)]/70",
+  emerald: "from-emerald-700 to-emerald-600",
+  blue: "from-[#185FA5] to-[#2978c8]",
+};
+
 export function ResourcesScreen() {
-  const resumes = [
-    { name: "BigLaw Regulatory — 1L", desc: "AI-tuned for D.C. enforcement roles", tag: "Top match" },
-    { name: "Investigations Associate", desc: "Optimized for litigation departments", tag: "Recommended" },
-    { name: "Federal Honors Program", desc: "Public sector pathway template", tag: "" },
-  ];
-  const articles = [
-    { t: "How to answer 'Why this firm?' for D.C. regulatory practices", read: "6 min", src: "AI-curated · 4 sources" },
-    { t: "What FTC associates actually look for in 1L cover letters", read: "4 min", src: "AI-curated · 3 sources" },
-    { t: "Privacy law projects that move the needle on screening", read: "8 min", src: "AI-curated · 5 sources" },
-  ];
+  const { resources, resourcesLoading, resourcesError, refreshResources } = useMeridianData();
 
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar fade-in pb-6">
-      <div className="px-5 pt-3 pb-2">
-        <div className="text-[10px] tracking-[0.18em] uppercase text-ink3 font-light">Curated for your target</div>
-        <div className="font-serif text-[26px] text-ink leading-tight font-light tracking-tight">Resources</div>
-        <div className="text-[11px] text-ink3 mt-1 font-light">Resume templates, interview prep, and articles — sourced and re-ranked by AI.</div>
+      <div className="px-5 pt-3 pb-2 flex items-start justify-between">
+        <div>
+          <div className="text-[10px] tracking-[0.18em] uppercase text-ink3 font-light">Curated for your target</div>
+          <div className="font-serif text-[26px] text-ink leading-tight font-light tracking-tight">Resources</div>
+          <div className="text-[11px] text-ink3 mt-1 font-light">Resume templates, interview prep, and articles — sourced and re-ranked by AI.</div>
+        </div>
+        <button onClick={refreshResources} className="text-[10px] text-ink3 tracking-wider uppercase hover:text-[var(--olo)] mt-2">↻</button>
       </div>
+
+      {resourcesError && (
+        <div className="mx-5 mb-2 text-[11px] text-red-700 bg-red-50 border border-red-100 rounded-xl px-3 py-2">{resourcesError}</div>
+      )}
 
       <SecRow label="Resume Templates" link="All templates" />
       <div className="px-5 space-y-2">
-        {resumes.map((r) => (
+        {resourcesLoading && !resources && [0,1,2].map(i => <div key={i} className="h-[78px] bg-surface rounded-2xl animate-pulse" />)}
+        {resources?.resumes.map((r) => (
           <div key={r.name} className="bg-surface rounded-2xl p-4 shadow-[0_1px_5px_rgba(0,0,0,0.05)] flex gap-3 items-start">
             <div className="w-11 h-14 rounded-md bg-gradient-to-br from-[var(--olo)]/20 to-[var(--navy)]/10 flex items-center justify-center text-[var(--olo)]">
               <I.FileText width={18} height={18} />
@@ -43,29 +49,33 @@ export function ResourcesScreen() {
 
       <SecRow label="Interview Prep" />
       <div className="px-5 grid grid-cols-2 gap-2">
-        {[
-          { t: "Behavioral Drills", n: 24, c: "from-[var(--navy)] to-[var(--navy)]/80" },
-          { t: "Firm-Specific Q's", n: 18, c: "from-[var(--olo)]/90 to-[var(--olo)]/70" },
-          { t: "Case Walkthroughs", n: 12, c: "from-emerald-700 to-emerald-600" },
-          { t: "Mock Sessions", n: 6, c: "from-[#185FA5] to-[#2978c8]" },
-        ].map((b) => (
-          <button key={b.t} className={`bg-gradient-to-br ${b.c} rounded-2xl p-4 text-left text-white aspect-square flex flex-col justify-between hover:scale-[1.02] transition`}>
-            <div className="text-[11px] tracking-[0.16em] uppercase opacity-70">{b.n} drills</div>
-            <div className="font-serif text-[20px] leading-tight">{b.t}</div>
+        {resources?.drills.map((b) => (
+          <button key={b.title} className={`bg-gradient-to-br ${themeMap[b.theme] || themeMap.navy} rounded-2xl p-4 text-left text-white aspect-square flex flex-col justify-between hover:scale-[1.02] transition`}>
+            <div className="text-[11px] tracking-[0.16em] uppercase opacity-70">{b.count} drills</div>
+            <div className="font-serif text-[20px] leading-tight">{b.title}</div>
           </button>
         ))}
       </div>
 
       <SecRow label="AI-Sourced Articles" link="More" />
       <div className="px-5 space-y-2">
-        {articles.map((a) => (
-          <div key={a.t} className="bg-surface rounded-2xl p-4 shadow-[0_1px_5px_rgba(0,0,0,0.05)]">
-            <div className="font-serif italic text-[15px] text-ink leading-snug mb-1.5">{a.t}</div>
-            <div className="flex items-center gap-2 text-[11px] text-ink3 font-light">
-              <span className="flex items-center gap-1"><I.Sparkles width={11} height={11} className="text-[var(--olo)]" /> {a.src}</span>
-              <span className="ml-auto">{a.read}</span>
+        {resources?.articles.map((a) => (
+          <details key={a.title} className="bg-surface rounded-2xl p-4 shadow-[0_1px_5px_rgba(0,0,0,0.05)] group">
+            <summary className="cursor-pointer list-none">
+              <div className="font-serif italic text-[15px] text-ink leading-snug mb-1.5">{a.title}</div>
+              <div className="flex items-center gap-2 text-[11px] text-ink3 font-light">
+                <span className="flex items-center gap-1"><I.Sparkles width={11} height={11} className="text-[var(--olo)]" /> {a.source}</span>
+                <span className="ml-auto">{a.readTime}</span>
+              </div>
+            </summary>
+            <div className="mt-3 pt-3 border-t border-black/[0.05] space-y-2.5">
+              <p className="text-[12px] text-ink2 leading-relaxed font-light">{a.summary}</p>
+              <div className="bg-[var(--olo)]/10 border-l-2 border-[var(--olo)] rounded-r-lg px-3 py-2">
+                <div className="text-[9px] tracking-[0.16em] uppercase text-[var(--olo)] font-medium mb-1">Why it matters</div>
+                <p className="text-[12px] text-ink leading-relaxed font-light">{a.whyItMatters}</p>
+              </div>
             </div>
-          </div>
+          </details>
         ))}
       </div>
     </div>
@@ -90,7 +100,6 @@ export function RoadmapScreen({ onOpenAction, onBack }: { onOpenAction: (id: num
         </div>
       </div>
 
-      {/* Hero progress */}
       <div className="mx-5 bg-gradient-to-br from-[var(--navy)] to-[var(--navy)]/90 rounded-3xl px-5 py-5 text-white relative overflow-hidden mb-3">
         <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-[var(--olo)]/10 blur-2xl" />
         <div className="text-[10px] tracking-[0.2em] uppercase text-white/40">This Week</div>
@@ -147,7 +156,6 @@ export function RoadmapScreen({ onOpenAction, onBack }: { onOpenAction: (id: num
   );
 }
 
-// ─── ACTION DETAIL ───
 export function ActionDetail({ id, onBack }: { id: number; onBack: () => void }) {
   const a = ACTIONS[id];
   return (
@@ -181,9 +189,6 @@ export function ActionDetail({ id, onBack }: { id: number; onBack: () => void })
         </div>
         <div className="h-[3px] bg-black/[0.06] rounded mt-3 overflow-hidden">
           <div className="h-full bg-[var(--olo)]" style={{ width: `${(a.pts / 24) * 100}%` }} />
-        </div>
-        <div className="flex justify-between mt-2 text-[10px] text-ink3 font-light">
-          <span>0</span><span>+6</span><span>+12</span><span>+18</span><span>+24</span>
         </div>
       </div>
 
