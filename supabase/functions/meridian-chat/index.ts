@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     const sys = profile
-      ? `${SYSTEM}\n\nUser profile: industry=${profile.industry || "?"}, stage=${profile.current || "?"}, target=${profile.target || "?"}.`
+      ? `${SYSTEM}\n\nUser profile: name=${profile.name || "?"}, industry=${profile.industry || "?"}, stage=${profile.current || "?"}, niche=${profile.niche || "?"}, target=${profile.target || "?"}, target employers=${(profile.employers || []).join(", ") || "?"}.${profile.resumeText ? `\n\nThe user's uploaded resume (use this aggressively to tailor every reply, cite specific lines, quote their actual experience, point to specific gaps):\n"""\n${String(profile.resumeText).slice(0, 8000)}\n"""` : "\n\n(No resume on file yet — gently nudge them to upload one for resume-specific advice.)"}`
       : SYSTEM;
 
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
