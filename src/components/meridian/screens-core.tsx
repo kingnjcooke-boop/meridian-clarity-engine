@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { I, MeridianMark } from "./icons";
 import type { OnboardingData } from "./Onboarding";
+import { useMeridianData } from "./MeridianDataContext";
 
 type StoryId = number;
 
