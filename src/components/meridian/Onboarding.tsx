@@ -98,7 +98,7 @@ export function Onboarding({ onDone }: { onDone: (d: OnboardingData) => void }) 
         {step === 1 && <NameStep data={data} setData={setData} onNext={next} />}
         {step === 2 && <EmailStep data={data} setData={setData} onNext={next} />}
         {step === 3 && <PickStep label="Which industry are you positioning for?" sub="We benchmark you against placed candidates here." options={INDUSTRIES} value={data.industry} onSelect={(v) => { setData(d => ({...d, industry: v})); setTimeout(next, 200); }} />}
-        {step === 4 && <PickStep label="Where are you today?" sub="Your starting point shapes which signals matter most." options={STAGES} value={data.current} onSelect={(v) => { setData(d => ({...d, current: v})); setTimeout(next, 200); }} />}
+        {step === 4 && <CurrentStep value={data.current} onChange={(v) => setData(d => ({...d, current: v}))} onNext={next} />}
         {step === 5 && <NicheStep loading={loadingPers} niches={niches} value={data.niche} onSelect={(v) => { setData(d => ({...d, niche: v})); setTimeout(next, 200); }} />}
         {step === 6 && <TargetStep examples={targetExamples} value={data.target} onChange={(v) => setData(d => ({...d, target: v}))} onNext={next} />}
         {step === 7 && <EmployersStep loading={loadingPers} suggestions={employerSugg} selected={data.employers} setSelected={(arr) => setData(d => ({...d, employers: arr}))} onDone={() => onDone(data)} />}
