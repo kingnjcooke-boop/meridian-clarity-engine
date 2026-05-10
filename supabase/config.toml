@@ -1,0 +1,10 @@
+project_id = "rqqcpdqkramczheycnrs"
+
+[functions.meridian-chat]
+verify_jwt = false
+
+[functions.meridian-news]
+verify_jwt = false
+
+[functions.meridian-resources]
+verify_jwt = false

@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { I } from "./icons";
-import { SecRow, STORIES } from "./screens-core";
+import { SecRow } from "./screens-core";
+import { useMeridianData } from "./MeridianDataContext";
 import type { OnboardingData } from "./Onboarding";
 
 // ─── ALERTS ───
 export function AlertsScreen({ onOpenStory }: { onOpenStory: (id: number) => void }) {
   const [filter, setFilter] = useState<"all" | "high" | "watch">("all");
+  const { stories, storiesLoading, storiesError, refreshStories } = useMeridianData();
 
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar fade-in pb-6">
@@ -18,14 +20,25 @@ export function AlertsScreen({ onOpenStory }: { onOpenStory: (id: number) => voi
         </div>
       </div>
 
-      <div className="px-5 flex gap-2 mb-2">
+      <div className="px-5 flex gap-2 mb-2 items-center">
         {[["all","All"],["high","High Impact"],["watch","Watch"]].map(([k, l]) => (
           <button key={k} onClick={() => setFilter(k as any)} className={`text-[11px] px-3 py-1.5 rounded-full border transition ${filter === k ? "border-[var(--olo)] bg-[var(--olo)]/10 text-[var(--olo)]" : "border-black/[0.07] text-ink3"}`}>{l}</button>
         ))}
+        <button onClick={refreshStories} className="ml-auto text-[10px] text-ink3 tracking-wider uppercase hover:text-[var(--olo)] transition">↻ Refresh</button>
       </div>
 
+      {storiesError && (
+        <div className="mx-5 mb-2 text-[11px] text-red-700 bg-red-50 border border-red-100 rounded-xl px-3 py-2">{storiesError}</div>
+      )}
+
       <div className="px-5 space-y-3">
-        {STORIES.map((s) => (
+        {storiesLoading && stories.length === 0 && [0,1,2].map(i => (
+          <div key={i} className="bg-surface rounded-2xl overflow-hidden shadow-[0_1px_5px_rgba(0,0,0,0.05)]">
+            <div className="h-[140px] bg-black/[0.04] animate-pulse" />
+            <div className="p-4 space-y-2"><div className="h-4 bg-black/[0.05] rounded animate-pulse" /><div className="h-3 w-1/2 bg-black/[0.04] rounded animate-pulse" /></div>
+          </div>
+        ))}
+        {stories.map((s) => (
           <button key={s.id} onClick={() => onOpenStory(s.id)} className="w-full bg-surface rounded-2xl overflow-hidden text-left shadow-[0_1px_5px_rgba(0,0,0,0.05)] hover:shadow-md transition">
             <div className="relative h-[140px]">
               <img src={s.img} alt="" className="w-full h-full object-cover" loading="lazy" />
@@ -60,7 +73,13 @@ export function AlertsScreen({ onOpenStory }: { onOpenStory: (id: number) => voi
 
 // ─── STORY DETAIL ───
 export function StoryDetail({ id, onBack }: { id: number; onBack: () => void }) {
-  const s = STORIES[id];
+  const { stories } = useMeridianData();
+  const s = stories[id];
+  if (!s) return (
+    <div className="flex-1 flex items-center justify-center text-ink3 text-sm fade-in">
+      <button onClick={onBack} className="underline">Story unavailable — go back</button>
+    </div>
+  );
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar fade-in">
       <div className="relative h-[260px]">
@@ -97,7 +116,7 @@ export function StoryDetail({ id, onBack }: { id: number; onBack: () => void }) 
         <div>
           <div className="text-[10px] tracking-[0.18em] uppercase text-ink3 mb-2">Sources confirming</div>
           <div className="space-y-1.5">
-            {s.confirmedBy.map((src) => (
+            {s.confirmedBy.map((src: string) => (
               <div key={src} className="flex items-center gap-2.5 px-3 py-2.5 bg-surface rounded-xl border border-black/[0.05]">
                 <I.Globe width={13} height={13} className="text-ink3" />
                 <span className="text-[12px] text-ink2 flex-1 font-light">{src}</span>
