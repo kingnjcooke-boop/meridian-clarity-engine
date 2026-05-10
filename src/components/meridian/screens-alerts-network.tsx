@@ -73,7 +73,13 @@ export function AlertsScreen({ onOpenStory }: { onOpenStory: (id: number) => voi
 
 // ─── STORY DETAIL ───
 export function StoryDetail({ id, onBack }: { id: number; onBack: () => void }) {
-  const s = STORIES[id];
+  const { stories } = useMeridianData();
+  const s = stories[id];
+  if (!s) return (
+    <div className="flex-1 flex items-center justify-center text-ink3 text-sm fade-in">
+      <button onClick={onBack} className="underline">Story unavailable — go back</button>
+    </div>
+  );
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar fade-in">
       <div className="relative h-[260px]">
