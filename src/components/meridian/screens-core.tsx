@@ -218,13 +218,15 @@ export function SecRow({ label, link, onLink }: { label: string; link?: string; 
 
 // ─── POSITION SCREEN ───
 export function PositionScreen({ user, onReposition, onUpdateResume, onBack }: { user: OnboardingData; onReposition: () => void; onUpdateResume: () => void; onBack: () => void }) {
+  const { scoreData } = useMeridianData();
+  const target = scoreData?.score ?? 0;
   const [score, setScore] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
     let v = 0;
-    const t = setInterval(() => { v = Math.min(v + 2, 81); setScore(v); if (v >= 81) clearInterval(t); }, 18);
+    const t = setInterval(() => { v = Math.min(v + 2, target); setScore(v); if (v >= target) clearInterval(t); }, 18);
     return () => clearInterval(t);
-  }, [user.target]);
+  }, [target]);
 
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar fade-in pb-4">
