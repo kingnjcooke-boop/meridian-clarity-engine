@@ -1,7 +1,8 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
-import { I } from "./icons";
+import { I, MeridianMark } from "./icons";
 import type { OnboardingData } from "./Onboarding";
 import { useMeridianData } from "./MeridianDataContext";
+import { MeridianCompass } from "./MeridianCompass";
 
 type StoryId = number;
 
@@ -29,7 +30,7 @@ function greetingFor(name: string) {
   return teasers[(new Date().getDate()) % teasers.length];
 }
 
-export function BriefScreen({ user, dark, setDark, onOpenAction, onOpenStory, onOpenRoadmap }: { user: OnboardingData; dark: boolean; setDark: Dispatch<SetStateAction<boolean>>; onOpenAction: (id: number) => void; onOpenStory: (id: StoryId) => void; onOpenRoadmap: () => void; }) {
+export function BriefScreen({ user, dark, setDark, onOpenStory, onOpenRoadmap, onOpenChat, onOpenPosition }: { user: OnboardingData; dark: boolean; setDark: Dispatch<SetStateAction<boolean>>; onOpenStory: (id: StoryId) => void; onOpenRoadmap: () => void; onOpenChat: () => void; onOpenPosition: () => void; }) {
   const firstName = user.name || "Alex";
   const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
   const [scrollIdx, setScrollIdx] = useState(0);
@@ -46,6 +47,9 @@ export function BriefScreen({ user, dark, setDark, onOpenAction, onOpenStory, on
           <div className="text-[11px] text-ink3 mt-1 font-light">{today} · {user.target || "—"}</div>
         </div>
         <div className="flex items-center gap-2">
+          <button onClick={onOpenChat} className="w-9 h-9 rounded-md bg-[var(--navy)] text-white flex items-center justify-center hover:opacity-90 transition" aria-label="Open Meridian AI">
+            <MeridianMark size={14} accent />
+          </button>
           <button onClick={() => setDark(d => !d)} className="w-9 h-9 border border-black/[0.06] dark:border-white/10 rounded-md flex items-center justify-center text-ink2 hover:bg-black/[0.03] dark:hover:bg-white/5 transition" aria-label="Toggle dark mode">
             {dark ? <I.Sun width={15} height={15} /> : <I.Moon width={15} height={15} />}
           </button>
@@ -56,7 +60,7 @@ export function BriefScreen({ user, dark, setDark, onOpenAction, onOpenStory, on
         </div>
       </div>
 
-      {/* Free greeting (no box) */}
+      {/* Free greeting */}
       <div className="px-5 pt-4 pb-3">
         <h1 className="text-[34px] leading-[1.05] font-semibold tracking-tight text-ink" style={{ fontFamily: "var(--font-sans)" }}>
           {greetingFor(firstName)}
@@ -64,11 +68,19 @@ export function BriefScreen({ user, dark, setDark, onOpenAction, onOpenStory, on
         <p className="text-[12.5px] text-ink2 mt-1 font-light">Here's where you stand today.</p>
       </div>
 
-      {/* Frosted stat squares */}
-      <div className="px-5 grid grid-cols-3 gap-2.5">
-        <FrostStat n="81" label="Score" sub="Top 14%" bg="var(--frost-score)" />
-        <FrostStat n="+6" label="7-Day" sub="Improving" bg="var(--frost-trend)" />
-        <FrostStat n="2" label="Active Gaps" sub="High Priority" bg="var(--frost-gap)" />
+      {/* Compass dashboard widget */}
+      <div className="px-5">
+        <MeridianCompass
+          onClick={onOpenPosition}
+          locked={!user.hasResume}
+          score={user.hasResume ? "81" : "—"}
+          scoreSub={user.hasResume ? "Top 14%" : "Locked"}
+          trend={user.hasResume ? "+6" : "—"}
+          trendSub={user.hasResume ? "↑ Improving" : "Pending"}
+          gaps={user.hasResume ? "2" : "—"}
+          gapsSub={user.hasResume ? "High Priority" : "Calibrating"}
+        />
+        <div className="text-center text-[10px] tracking-[0.18em] uppercase text-ink3 mt-3 font-light">Tap compass to open Position</div>
       </div>
 
       {/* Stories */}
@@ -107,26 +119,10 @@ export function BriefScreen({ user, dark, setDark, onOpenAction, onOpenStory, on
         ))}
       </div>
 
-      {/* Top 3 actions — treasure-map roadmap */}
-      <SecRow label="Top 3 Actions Today" link="See full plan" onLink={onOpenRoadmap} />
-      <TreasureMap actions={ACTIONS} onOpenAction={onOpenAction} />
-
-      <div className="px-5 pt-4 pb-2">
+      <div className="px-5 pt-5 pb-2">
         <button onClick={onOpenRoadmap} className="w-full bg-[var(--navy)] text-white py-4 rounded-2xl text-[12px] tracking-[0.1em] uppercase font-light hover:opacity-90 transition">
           View Full Roadmap
         </button>
-      </div>
-    </div>
-  );
-}
-
-function FrostStat({ n, label, sub, bg }: { n: string; label: string; sub: string; bg: string }) {
-  return (
-    <div className="frost rounded-2xl p-3 aspect-[1/1.05] flex flex-col justify-between" style={{ background: bg }}>
-      <div className="font-serif text-[34px] leading-none text-ink tabular-nums font-light">{n}</div>
-      <div>
-        <div className="text-[10px] uppercase tracking-[0.14em] text-ink2 font-medium">{label}</div>
-        <div className="text-[10px] text-ink2/80 mt-0.5 font-light">{sub}</div>
       </div>
     </div>
   );
