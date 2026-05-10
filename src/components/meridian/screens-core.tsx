@@ -100,10 +100,10 @@ export function BriefScreen({ user, onOpenAction, onOpenStory, onOpenRoadmap }: 
         className="px-5 flex gap-3 overflow-x-auto no-scrollbar snap-x snap-mandatory"
         onScroll={(e) => {
           const el = e.currentTarget;
-          setScrollIdx(Math.min(STORIES.length - 1, Math.round(el.scrollLeft / (el.scrollWidth / STORIES.length))));
+          setScrollIdx(Math.min(carouselStories.length - 1, Math.round(el.scrollLeft / (el.scrollWidth / carouselStories.length))));
         }}
       >
-        {STORIES.map(s => (
+        {carouselStories.map(s => (
           <button key={s.id} onClick={() => onOpenStory(s.id)} className="flex-shrink-0 w-[300px] h-[320px] rounded-2xl overflow-hidden relative snap-start text-left">
             <img src={s.img} alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 hover:scale-105" loading="lazy" />
             <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,.04) 0%, rgba(0,0,0,.1) 25%, rgba(0,0,0,.6) 62%, rgba(0,0,0,.96) 100%)" }} />
@@ -128,7 +128,7 @@ export function BriefScreen({ user, onOpenAction, onOpenStory, onOpenRoadmap }: 
         ))}
       </div>
       <div className="flex justify-center gap-1.5 pt-2.5">
-        {STORIES.map((_, i) => (
+        {carouselStories.map((_, i) => (
           <div key={i} className={`h-1 rounded transition-all ${i === scrollIdx ? "w-3.5 bg-[var(--olo)]" : "w-1 bg-black/15"}`} />
         ))}
       </div>
