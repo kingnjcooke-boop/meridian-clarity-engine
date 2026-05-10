@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 
-export function MobileFrame({ children }: { children: ReactNode }) {
+export function MobileFrame({ children, dark }: { children: ReactNode; dark?: boolean }) {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 md:p-8" style={{ background: "oklch(0.18 0.03 250)" }}>
-      <div className="w-[390px] max-w-full rounded-[52px] p-[4px] shadow-[0_60px_120px_rgba(0,0,0,0.85),0_0_0_1px_rgba(255,255,255,0.07)]" style={{ background: "#1a1a1a" }}>
+    <div className="min-h-screen w-full flex items-center justify-center p-4 md:p-8 transition-colors" style={{ background: dark ? "oklch(0.08 0.02 250)" : "oklch(0.18 0.03 250)" }}>
+      <div className="w-[390px] max-w-full rounded-[52px] p-[4px] shadow-[0_60px_120px_rgba(0,0,0,0.85),0_0_0_1px_rgba(255,255,255,0.07)]" style={{ background: dark ? "#0a0a0a" : "#1a1a1a" }}>
         <div className="rounded-[49px] overflow-hidden h-[820px] flex flex-col bg-background">
           <StatusBar />
           <div className="flex-1 flex flex-col overflow-hidden">{children}</div>
