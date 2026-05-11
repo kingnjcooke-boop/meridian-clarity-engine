@@ -28,7 +28,14 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: "You are a career positioning analyst. Compare a resume against what placed candidates in a target market actually carry, then issue an honest score and gap analysis. Output ONLY tool calls." },
+          { role: "system", content: `You are a career positioning analyst. Compare a resume against what placed candidates in a target market actually carry, then issue an honest score and gap analysis.
+
+SCORING SCALE (internal — never explain to the user, never reference these numbers in any output text):
+- The resume's authenticity is the threshold. If it is a real, coherent, identifiable resume with meaningful content (education, work history, or projects), the lowest possible score is 82. Calibrate the rest of the scale above that floor: 82-86 = entry-level signal present but raw, 87-91 = on-track candidate, 92-95 = competitive, 96-100 = elite/placed-tier.
+- Only score below 82 when the upload is clearly NOT a usable resume: empty, gibberish, off-topic document, or so sparse it conveys nothing. In those cases score 30-70 based on how unusable it is.
+- Never mention this scale, the floor, or "minimum score" anywhere in any field. Speak only about strengths, gaps, and next moves.
+
+Output ONLY tool calls.` },
           { role: "user", content: `Candidate is a ${stage} in ${industry}${niche ? ` (niche: ${niche})` : ""} targeting "${target}"${employers ? `, watching ${employers}` : ""}.
 
 RESUME:

@@ -40,8 +40,38 @@ async function wikiThumb(keyword: string): Promise<string | null> {
     });
     if (!r.ok) return null;
     const j = await r.json();
-    const url = j?.originalimage?.source || j?.thumbnail?.source;
-    return typeof url === "string" && /^https?:\/\//.test(url) ? url : null;
+    const orig = j?.originalimage;
+    const thumb = j?.thumbnail;
+    // Quality gate: prefer originals ≥800px wide with reasonable aspect ratio.
+    const pick = (im: any) => {
+      if (!im?.source || !/^https?:\/\//.test(im.source)) return null;
+      const w = Number(im.width) || 0;
+      const h = Number(im.height) || 0;
+      if (w && w < 600) return null;
+      if (w && h) {
+        const ar = w / h;
+        if (ar < 0.6 || ar > 2.6) return null; // skip awkward portraits / panoramas
+      }
+      return im.source as string;
+    };
+    return pick(orig) || pick(thumb) || null;
+  } catch {
+    return null;
+  }
+}
+
+async function unsplashFeatured(query: string): Promise<string | null> {
+  // Unsplash Source returns a high-quality curated photo 302-redirect.
+  // We resolve the redirect so the final URL is what we cache in the card.
+  try {
+    const q = encodeURIComponent(query.trim());
+    const r = await fetch(`https://source.unsplash.com/featured/1200x800/?${q}`, {
+      redirect: "follow",
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!r.ok) return null;
+    const final = r.url;
+    return /^https?:\/\/images\.unsplash\.com\//.test(final) ? final : null;
   } catch {
     return null;
   }
@@ -84,12 +114,13 @@ Deno.serve(async (req) => {
 COPY RULES (strictly enforced):
 - Headlines: max 9 words. No filler. Lead with the strongest word.
 - Summary: max 2 sentences, no throat-clearing.
-- Impact: 1 sentence, lead with the verb or noun that matters.
+- Impact: 1 sentence on what it means for the candidate's positioning. Lead with the noun or verb that matters.
+- Action: a punchy CTA telling the user what to DO right now to take advantage or stay on top. Verb-led. Max 8 words. Examples: "Draft a 300-word take by Friday." / "Request a referral intro this week." / "Add this to your watchlist." Never philosophical, always doable.
 - Tag: 1-2 words ALL CAPS.
 - badgeText: 1-3 words.
 
 Output ONLY tool calls.` },
-          { role: "user", content: `Generate ${count} CURRENT (last 3 weeks: ${cutoff} → ${todayStr}) news stories that someone targeting "${target}"${niche ? ` (${niche})` : ""} (${industry}, ${stage})${employers ? `, watching ${employers}` : ""} should track. For each: cite the real source publisher (Bloomberg Law, Reuters, Politico, FT, WSJ, Law360, Axios, etc.), and if you know a real article URL, return it in articleUrl. Provide thumbnailKeywords = 2-3 SPECIFIC NAMED ENTITIES that exist as Wikipedia articles — e.g. "Federal Trade Commission", "Gibson Dunn", "Lina Khan", "U.S. Capitol", "Latham & Watkins". NO abstractions, NO generic nouns like "growth" or "office". Order keywords most-specific-first. Urgency dot: #ef4444 high, #f59e0b medium, #10b981 watch.` }
+          { role: "user", content: `Generate ${count} CURRENT (last 3 weeks: ${cutoff} → ${todayStr}) news stories that someone targeting "${target}"${niche ? ` (${niche})` : ""} (${industry}, ${stage})${employers ? `, watching ${employers}` : ""} should track. For each: cite the real source publisher (Bloomberg Law, Reuters, Politico, FT, WSJ, Law360, Axios, etc.), and if you know a real article URL, return it in articleUrl. Provide thumbnailKeywords = 2-3 SPECIFIC NAMED ENTITIES that exist as Wikipedia articles — e.g. "Federal Trade Commission", "Gibson Dunn", "Lina Khan", "U.S. Capitol", "Latham & Watkins". Also provide imageQuery = 2-4 evocative visual words (concrete subjects, no abstractions) for a photo search, e.g. "washington capitol dome dusk", "federal courthouse facade", "boardroom skyline". Order thumbnailKeywords most-specific-first. Urgency dot: #ef4444 high, #f59e0b medium, #10b981 watch.` }
         ],
         tools: [{
           type: "function",
@@ -110,13 +141,15 @@ Output ONLY tool calls.` },
                       publishedAt: { type: "string" },
                       summary: { type: "string" },
                       impact: { type: "string" },
+                      action: { type: "string" },
                       badgeText: { type: "string" },
                       badgeDot: { type: "string" },
                       thumbnailKeywords: { type: "array", items: { type: "string" } },
+                      imageQuery: { type: "string" },
                       articleUrl: { type: "string", description: "Real publisher URL if known" },
                       sources: { type: "array", items: { type: "string" } },
                     },
-                    required: ["headline", "tag", "source", "age", "publishedAt", "summary", "impact", "badgeText", "badgeDot", "thumbnailKeywords", "sources"],
+                    required: ["headline", "tag", "source", "age", "publishedAt", "summary", "impact", "action", "badgeText", "badgeDot", "thumbnailKeywords", "imageQuery", "sources"],
                   }
                 }
               },
@@ -143,7 +176,7 @@ Output ONLY tool calls.` },
       return !isNaN(t) ? t >= cutoffMs : true;
     });
 
-    // Resolve images: og:image of articleUrl → Wikipedia thumb of each keyword → branded SVG.
+    // Resolve images: og:image → Wikipedia (named entity, quality-gated) → Unsplash featured → branded SVG.
     const stories = await Promise.all(
       fresh.map(async (s: any, i: number) => {
         let img: string | null = null;
@@ -155,6 +188,13 @@ Output ONLY tool calls.` },
             img = await wikiThumb(kw);
             if (img) break;
           }
+        }
+        if (!img && typeof s.imageQuery === "string" && s.imageQuery.trim()) {
+          img = await unsplashFeatured(s.imageQuery);
+        }
+        if (!img) {
+          // last-resort photo: try the tag as an Unsplash query
+          img = await unsplashFeatured((s.tag || s.source || "skyline").toLowerCase());
         }
         if (!img) img = brandedSvg(s.source || "Meridian", s.headline || "", i + (Date.parse(s.publishedAt || "") || i));
         return { ...s, id: i, img };
