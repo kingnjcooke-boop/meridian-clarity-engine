@@ -414,3 +414,31 @@ function GapCard({ icon, title, pts, sub, w }: any) {
     </div>
   );
 }
+
+function CohortPositionPanel({ user, animScore }: { user: OnboardingData; animScore: number }) {
+  const { scoreData } = useMeridianData();
+  const { stats } = useCohortStats(user.industry, user.niche, user.target);
+  const raw = scoreData?.score ?? null;
+  const pct = raw != null && stats ? percentileFromCurve(raw, stats) : null;
+
+  return (
+    <div className="mx-5 bg-[var(--navy)] text-white rounded-3xl px-6 py-6 relative overflow-hidden">
+      <div className="text-[9px] tracking-[0.22em] uppercase text-white/30 mb-2">Positioning Score</div>
+      <div className="flex items-end gap-4">
+        <div className="font-serif text-[88px] font-light leading-[0.9] tracking-tight tabular-nums">{animScore}</div>
+        <div className="pb-3">
+          <div className="font-serif italic text-[18px] leading-none">{raw != null ? tierFromScore(raw) : "—"}</div>
+          <div className="text-[10px] tracking-[0.2em] uppercase text-white/40 mt-1.5">
+            {pct != null ? `Top ${Math.max(1, 100 - pct)}% of cohort` : "Calibrating"}
+          </div>
+        </div>
+      </div>
+      <div className="mt-5 text-white/90">
+        {stats ? <CohortCurve stats={stats} score={raw} height={170} /> : <div className="h-[170px]" />}
+      </div>
+      <div className="text-[10.5px] text-white/45 mt-1 font-light tracking-wide">
+        {stats ? `${stats.sample_size} placed candidates · ${user.target || "target market"}` : "Loading cohort distribution"}
+      </div>
+    </div>
+  );
+}
