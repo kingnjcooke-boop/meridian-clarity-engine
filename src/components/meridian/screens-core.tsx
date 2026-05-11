@@ -20,14 +20,8 @@ export const ACTIONS = [
 
 function greetingFor(name: string) {
   const h = new Date().getHours();
-  const time = h < 5 ? "burning the midnight oil" : h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : h < 21 ? "Good evening" : "Up late";
-  const teasers = [
-    `${time}, ${name}.`,
-    `${time}, ${name} — ready to move?`,
-    `Hey ${name}.`,
-    `${time}, ${name}. Markets don't wait.`,
-  ];
-  return teasers[(new Date().getDate()) % teasers.length];
+  const time = h < 5 ? "Up late" : h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : h < 21 ? "Good evening" : "Up late";
+  return `${time}, ${name}.`;
 }
 
 export function BriefScreen({ user, dark, setDark, onOpenStory, onOpenRoadmap, onOpenChat, onOpenPosition }: { user: OnboardingData; dark: boolean; setDark: Dispatch<SetStateAction<boolean>>; onOpenStory: (id: StoryId) => void; onOpenRoadmap: () => void; onOpenChat: () => void; onOpenPosition: () => void; }) {
