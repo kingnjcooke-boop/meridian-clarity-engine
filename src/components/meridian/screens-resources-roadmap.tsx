@@ -61,7 +61,7 @@ export function ResourcesScreen({ onOpenIndustryBrief, onOpenDrill, onOpenLexico
       <div className="px-5 space-y-2">
         {resourcesLoading && !resources && [0,1,2].map(i => <div key={i} className="h-[78px] bg-surface rounded-2xl animate-pulse" />)}
         {resources?.resumes.map((r) => (
-          <a key={r.name} href={r.templateUrl} target="_blank" rel="noopener noreferrer" className="block bg-surface rounded-2xl p-4 shadow-[0_1px_5px_rgba(0,0,0,0.05)] flex gap-3 items-start hover:shadow-md transition">
+          <a key={r.name} href={ensureTemplateUrl(r.templateUrl, r.name)} target="_blank" rel="noopener noreferrer" className="block bg-surface rounded-2xl p-4 shadow-[0_1px_5px_rgba(0,0,0,0.05)] flex gap-3 items-start hover:shadow-md transition">
             <div className="w-11 h-14 rounded-md bg-gradient-to-br from-[var(--olo)]/20 to-[var(--navy)]/10 flex items-center justify-center text-[var(--olo)]">
               <I.FileText width={18} height={18} />
             </div>
