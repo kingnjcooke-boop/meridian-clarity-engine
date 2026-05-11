@@ -40,8 +40,38 @@ async function wikiThumb(keyword: string): Promise<string | null> {
     });
     if (!r.ok) return null;
     const j = await r.json();
-    const url = j?.originalimage?.source || j?.thumbnail?.source;
-    return typeof url === "string" && /^https?:\/\//.test(url) ? url : null;
+    const orig = j?.originalimage;
+    const thumb = j?.thumbnail;
+    // Quality gate: prefer originals ≥800px wide with reasonable aspect ratio.
+    const pick = (im: any) => {
+      if (!im?.source || !/^https?:\/\//.test(im.source)) return null;
+      const w = Number(im.width) || 0;
+      const h = Number(im.height) || 0;
+      if (w && w < 600) return null;
+      if (w && h) {
+        const ar = w / h;
+        if (ar < 0.6 || ar > 2.6) return null; // skip awkward portraits / panoramas
+      }
+      return im.source as string;
+    };
+    return pick(orig) || pick(thumb) || null;
+  } catch {
+    return null;
+  }
+}
+
+async function unsplashFeatured(query: string): Promise<string | null> {
+  // Unsplash Source returns a high-quality curated photo 302-redirect.
+  // We resolve the redirect so the final URL is what we cache in the card.
+  try {
+    const q = encodeURIComponent(query.trim());
+    const r = await fetch(`https://source.unsplash.com/featured/1200x800/?${q}`, {
+      redirect: "follow",
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!r.ok) return null;
+    const final = r.url;
+    return /^https?:\/\/images\.unsplash\.com\//.test(final) ? final : null;
   } catch {
     return null;
   }
