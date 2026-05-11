@@ -79,6 +79,87 @@ export type Database = {
           },
         ]
       }
+      cohort_profiles: {
+        Row: {
+          created_at: string
+          id: string
+          industry: string
+          niche: string | null
+          score: number
+          target: string
+          tier: string
+          top_gap: string | null
+          top_signals: Json
+          year_placed: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          industry: string
+          niche?: string | null
+          score: number
+          target: string
+          tier: string
+          top_gap?: string | null
+          top_signals?: Json
+          year_placed?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          industry?: string
+          niche?: string | null
+          score?: number
+          target?: string
+          tier?: string
+          top_gap?: string | null
+          top_signals?: Json
+          year_placed?: number | null
+        }
+        Relationships: []
+      }
+      cohort_stats: {
+        Row: {
+          histogram: Json
+          id: string
+          industry: string
+          median: number | null
+          niche: string | null
+          p25: number | null
+          p75: number | null
+          p90: number | null
+          sample_size: number
+          target: string
+          updated_at: string
+        }
+        Insert: {
+          histogram?: Json
+          id?: string
+          industry: string
+          median?: number | null
+          niche?: string | null
+          p25?: number | null
+          p75?: number | null
+          p90?: number | null
+          sample_size?: number
+          target: string
+          updated_at?: string
+        }
+        Update: {
+          histogram?: Json
+          id?: string
+          industry?: string
+          median?: number | null
+          niche?: string | null
+          p25?: number | null
+          p75?: number | null
+          p90?: number | null
+          sample_size?: number
+          target?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           created_at: string
@@ -265,6 +346,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      refresh_cohort_stats: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "coach" | "user"
