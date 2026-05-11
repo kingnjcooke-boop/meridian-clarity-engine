@@ -76,8 +76,8 @@ export function BriefScreen({ user, dark, setDark, onOpenStory, onOpenRoadmap, o
         <p className="text-[12.5px] text-ink2 mt-1 font-light">Here's where you stand today.</p>
       </div>
 
-      {/* Floating compass — no container, just the widget */}
-      <div className="pt-1 pb-5">
+      {/* Floating knob — no container */}
+      <div className="pt-3 pb-4">
         <MeridianCompass
           onClick={onOpenPosition}
           locked={!user.hasResume}
@@ -90,7 +90,6 @@ export function BriefScreen({ user, dark, setDark, onOpenStory, onOpenRoadmap, o
         />
         <CandidateSnapshot
           ready={Boolean(hasScore)}
-          summary={scoreData?.summary}
           strength={scoreData?.strengths?.[0]}
           gap={scoreData?.gaps?.[0]?.title}
           locked={!user.hasResume}
