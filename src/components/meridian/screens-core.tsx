@@ -104,8 +104,7 @@ export function BriefScreen({ user, dark, setDark, onOpenStory, onOpenRoadmap, o
               <span className="text-[10px] text-white/85 tracking-wider">{s.badge.text}</span>
             </div>
             <div className="absolute top-3.5 left-3.5 bg-black/40 backdrop-blur-md border border-white/10 rounded-full px-2 py-0.5 flex items-center gap-1">
-              <I.CheckCircle width={9} height={9} className="text-emerald-300" />
-              <span className="text-[9px] text-white/70 tracking-wider">{s.confirmedBy.length} sources</span>
+              <span className="text-[9px] text-white/70 tracking-wider uppercase">{s.source}</span>
             </div>
             <div className="absolute bottom-0 inset-x-0 p-4 pb-5">
               <span className="inline-block text-[9px] tracking-[0.13em] uppercase px-2.5 py-1 rounded-full mb-2" style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.85)" }}>{s.tag}</span>
