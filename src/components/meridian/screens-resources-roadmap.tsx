@@ -140,6 +140,42 @@ export function ResourcesScreen({ onOpenIndustryBrief, onOpenDrill, onOpenLexico
   );
 }
 
+export function LexiconDetail({ onBack }: { onBack: () => void }) {
+  const { resources } = useMeridianData();
+  const terms = resources?.lexicon || [];
+  return (
+    <div className="flex-1 overflow-y-auto no-scrollbar fade-in pb-6">
+      <div className="flex items-center gap-3 px-5 pt-3 pb-2">
+        <button onClick={onBack} className="w-9 h-9 rounded-md bg-black/[0.04] dark:bg-white/[0.06] flex items-center justify-center text-ink2"><I.ChevronLeft width={16} height={16} /></button>
+        <div>
+          <div className="text-[10px] tracking-[0.18em] uppercase text-ink3 font-light">Resources</div>
+          <div className="font-serif text-[22px] text-ink leading-tight font-light">Insider Lexicon</div>
+        </div>
+      </div>
+      <div className="mx-5 mt-2 mb-3 rounded-2xl bg-[var(--olo)]/10 border border-[var(--olo)]/20 px-4 py-3">
+        <div className="text-[10px] tracking-[0.18em] uppercase text-[var(--olo)] mb-1">Field nuance</div>
+        <p className="text-[12.5px] text-ink2 leading-relaxed font-light">The shorthand, hidden rules, and interview cues that insiders expect you to understand.</p>
+      </div>
+      <div className="px-5 space-y-2.5">
+        {terms.map((l, i) => (
+          <div key={i} className="bg-surface rounded-2xl px-4 py-4 shadow-[0_1px_5px_rgba(0,0,0,0.05)] border border-black/[0.04] dark:border-white/[0.06]">
+            <div className="flex items-start gap-3">
+              <div className="w-7 h-7 rounded-full bg-[var(--olo)]/12 text-[var(--olo)] flex items-center justify-center text-[11px] flex-shrink-0">{i + 1}</div>
+              <div className="min-w-0 flex-1">
+                <div className="font-serif italic text-[17px] text-ink leading-snug">{l.term}</div>
+                <p className="text-[12.5px] text-ink2 leading-relaxed font-light mt-1">{l.definition}</p>
+                <div className="mt-2.5 border-l-2 border-[var(--olo)]/45 pl-3 text-[12px] text-ink3 leading-relaxed font-light">
+                  <span className="text-[var(--olo)] text-[9px] uppercase tracking-[0.14em] mr-1.5">Why it matters</span>{l.whyItMatters}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function IndustryBriefDetail({ onBack }: { onBack: () => void }) {
   const { resources } = useMeridianData();
   const b = resources?.industryBrief;
