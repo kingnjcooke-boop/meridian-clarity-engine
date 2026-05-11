@@ -1,6 +1,7 @@
 import { I } from "./icons";
 import { ACTIONS, SecRow } from "./screens-core";
 import { useMeridianData } from "./MeridianDataContext";
+import type { ScoreData } from "./MeridianDataContext";
 
 const themeMap: Record<string, string> = {
   navy: "from-[var(--navy)] to-[var(--navy)]/80",
@@ -298,6 +299,26 @@ export function DrillDetail({ idx, onBack }: { idx: number; onBack: () => void }
       </div>
     </div>
   );
+}
+
+type RoadmapAction = typeof ACTIONS[number];
+
+function roadmapActions(scoreData?: ScoreData | null): RoadmapAction[] {
+  if (!scoreData?.roadmap?.length) return ACTIONS;
+  return scoreData.roadmap.map((a, i) => ({
+    id: i,
+    title: a.title,
+    signal: a.signal,
+    gap: a.gap,
+    pts: Math.max(4, Math.min(15, Math.round(Number(a.pts) || 8))),
+    impact: i === 0 ? "High" : i < 3 ? "Medium" : "Focused",
+    time: a.time,
+    color: i % 3 === 1 ? "#C68B4E" : i % 3 === 2 ? "#185FA5" : "#3B6D11",
+    chip: "bg-[var(--olo)]/10 text-[var(--olo)]",
+    why: a.why,
+    steps: a.steps?.length ? a.steps : [a.title, "Turn it into a resume-visible signal", "Use it in targeted outreach"],
+    tip: a.tip,
+  }));
 }
 
 // ─── ROADMAP ───
