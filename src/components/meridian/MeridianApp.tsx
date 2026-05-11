@@ -4,7 +4,7 @@ import { Onboarding, type OnboardingData } from "./Onboarding";
 import { BottomNav, type Tab } from "./BottomNav";
 import { BriefScreen, PositionScreen } from "./screens-core";
 import { AlertsScreen, NetworkScreen, StoryDetail } from "./screens-alerts-network";
-import { ResourcesScreen, RoadmapScreen, ActionDetail, IndustryBriefDetail, DrillDetail } from "./screens-resources-roadmap";
+import { ResourcesScreen, RoadmapScreen, ActionDetail, IndustryBriefDetail, DrillDetail, LexiconDetail } from "./screens-resources-roadmap";
 import { ChatOverlay } from "./ChatOverlay";
 import { RepositionOverlay } from "./RepositionOverlay";
 import { ResumeUpload } from "./ResumeUpload";
@@ -16,6 +16,7 @@ type Overlay =
   | { kind: "action"; id: number }
   | { kind: "drill"; idx: number }
   | { kind: "industryBrief" }
+  | { kind: "lexicon" }
   | { kind: "roadmap" }
   | { kind: "chat" }
   | { kind: "position" }
@@ -48,6 +49,7 @@ export function MeridianApp() {
             {overlay.kind === "action" && <ActionDetail id={overlay.id} onBack={() => setOverlay({ kind: "none" })} />}
             {overlay.kind === "drill" && <DrillDetail idx={overlay.idx} onBack={() => setOverlay({ kind: "none" })} />}
             {overlay.kind === "industryBrief" && <IndustryBriefDetail onBack={() => setOverlay({ kind: "none" })} />}
+            {overlay.kind === "lexicon" && <LexiconDetail onBack={() => setOverlay({ kind: "none" })} />}
             {overlay.kind === "roadmap" && <RoadmapScreen onOpenAction={(id) => setOverlay({ kind: "action", id })} onBack={() => setOverlay({ kind: "none" })} />}
             {overlay.kind === "position" && (
               <PositionScreen
@@ -72,7 +74,7 @@ export function MeridianApp() {
                 )}
                 {tab === "alerts" && <AlertsScreen onOpenStory={(id) => setOverlay({ kind: "story", id })} />}
                 {tab === "network" && <NetworkScreen user={user} />}
-                {tab === "resources" && <ResourcesScreen onOpenIndustryBrief={() => setOverlay({ kind: "industryBrief" })} onOpenDrill={(idx) => setOverlay({ kind: "drill", idx })} />}
+                {tab === "resources" && <ResourcesScreen onOpenIndustryBrief={() => setOverlay({ kind: "industryBrief" })} onOpenLexicon={() => setOverlay({ kind: "lexicon" })} onOpenDrill={(idx) => setOverlay({ kind: "drill", idx })} />}
               </>
             )}
             {overlay.kind === "chat" && <ChatOverlay user={user} onClose={() => setOverlay({ kind: "none" })} />}
