@@ -111,6 +111,15 @@ export function StoryDetail({ id, onBack }: { id: number; onBack: () => void }) 
             <span className="text-[10px] tracking-[0.16em] uppercase text-[var(--olo)] font-medium">Impact on your positioning</span>
           </div>
           <p className="text-[13px] text-ink leading-relaxed font-light">{s.impact}</p>
+          {s.action && (
+            <div className="mt-3 pt-3 border-t border-[var(--olo)]/20 flex items-start gap-2">
+              <I.ArrowRight width={12} height={12} className="text-[var(--olo)] mt-[3px] shrink-0" />
+              <div>
+                <div className="text-[9.5px] tracking-[0.18em] uppercase text-[var(--olo)] font-medium mb-0.5">Your move</div>
+                <p className="text-[12.5px] text-ink leading-snug font-normal">{s.action}</p>
+              </div>
+            </div>
+          )}
         </div>
 
         <div>
