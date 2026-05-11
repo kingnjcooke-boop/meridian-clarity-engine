@@ -29,98 +29,115 @@ function ensureTemplateUrl(url: string | undefined, name: string): string {
 export function ResourcesScreen({ onOpenIndustryBrief, onOpenDrill, onOpenLexicon }: { onOpenIndustryBrief: () => void; onOpenDrill: (idx: number) => void; onOpenLexicon: () => void }) {
   const { resources, resourcesLoading, resourcesError, refreshResources } = useMeridianData();
   const brief = resources?.industryBrief;
+  const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric" });
 
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar fade-in pb-6">
-      <div className="px-5 pt-3 pb-2 flex items-start justify-between">
+      {/* Masthead — editorial */}
+      <div className="px-5 pt-5 pb-3 flex items-end justify-between border-b border-black/[0.06] dark:border-white/10">
         <div>
-          <div className="text-[10px] tracking-[0.18em] uppercase text-ink3 font-light">Curated for your target</div>
-          <div className="font-serif text-[26px] text-ink leading-tight font-light tracking-tight">Resources</div>
-          <div className="text-[11px] text-ink3 mt-1 font-light">Sourced and re-ranked by AI · refreshed daily</div>
+          <div className="text-[9.5px] tracking-[0.3em] uppercase text-ink3 font-light">Vol. 01 · {today}</div>
+          <div className="font-serif text-[40px] text-ink leading-[0.95] font-light tracking-tight mt-1">Resources</div>
         </div>
-        <button onClick={refreshResources} className="text-[10px] text-ink3 tracking-wider uppercase hover:text-[var(--olo)] mt-2">↻</button>
+        <button onClick={refreshResources} className="text-[9.5px] text-ink3 tracking-[0.22em] uppercase hover:text-[var(--olo)] transition pb-1.5">Refresh</button>
       </div>
 
       {resourcesError && (
-        <div className="mx-5 mb-2 text-[11px] text-red-700 bg-red-50 border border-red-100 rounded-xl px-3 py-2">{resourcesError}</div>
+        <div className="mx-5 mt-3 text-[11px] text-red-700 bg-red-50 border border-red-100 rounded-xl px-3 py-2">{resourcesError}</div>
       )}
 
-      {/* INDUSTRY BRIEF — focal card */}
-      <div className="px-5 pt-1 pb-3">
-        {resourcesLoading && !brief && <div className="h-[260px] bg-surface rounded-3xl animate-pulse" />}
+      {/* INDUSTRY BRIEF — full-bleed editorial cover */}
+      <div className="px-5 pt-5 pb-2">
+        {resourcesLoading && !brief && <div className="h-[320px] bg-surface rounded-3xl animate-pulse" />}
         {brief && (
-          <button onClick={onOpenIndustryBrief} className="w-full text-left rounded-3xl overflow-hidden relative shadow-[0_18px_50px_rgba(0,0,0,0.18)] active:scale-[0.99] transition" style={{ height: 280 }}>
+          <button onClick={onOpenIndustryBrief} className="w-full text-left rounded-[28px] overflow-hidden relative shadow-[0_24px_60px_-20px_rgba(0,0,0,0.35)] active:scale-[0.99] transition-transform" style={{ height: 360 }}>
             {brief.image && <img src={brief.image} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />}
-            <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(10,15,30,0.25) 0%, rgba(10,15,30,0.55) 50%, rgba(10,15,30,0.95) 100%)" }} />
-            <div className="absolute top-4 left-4 frost rounded-full px-2.5 py-1 flex items-center gap-1.5" style={{ background: "rgba(255,255,255,0.15)" }}>
-              <I.Sparkles width={11} height={11} className="text-[var(--olo)]" />
-              <span className="text-[9px] tracking-[0.18em] uppercase text-white/95">Industry Brief</span>
+            <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(10,15,30,0.15) 0%, rgba(10,15,30,0.5) 55%, rgba(10,15,30,0.96) 100%)" }} />
+
+            <div className="absolute top-5 left-5 right-5 flex items-center justify-between">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-white/20" style={{ background: "rgba(255,255,255,0.08)", backdropFilter: "blur(14px)" }}>
+                <I.Sparkles width={10} height={10} className="text-[var(--olo)]" />
+                <span className="text-[9px] tracking-[0.22em] uppercase text-white/95 font-light">Brief</span>
+              </div>
+              <span className="text-[9px] tracking-[0.22em] uppercase text-white/70">This week</span>
             </div>
-            <div className="absolute top-4 right-4 frost rounded-full px-2 py-0.5" style={{ background: "rgba(255,255,255,0.1)" }}>
-              <span className="text-[9px] tracking-wider text-white/80">This week</span>
-            </div>
-            <div className="absolute bottom-0 inset-x-0 p-5">
-              <div className="font-serif text-[26px] text-white leading-[1.1] font-light tracking-tight mb-1.5">{brief.title}</div>
-              <div className="text-[11px] text-white/70 font-light mb-3">{brief.subtitle}</div>
-              <div className="flex items-center gap-2.5 text-white/80 text-[10px] tracking-wide">
-                <span className="flex items-center gap-1"><I.Map width={10} height={10} /> {(brief.steps?.length ?? 0)} steps</span>
-                <span className="w-1 h-1 rounded-full bg-white/40" />
-                <span className="flex items-center gap-1"><I.Clock width={10} height={10} /> {brief.timing}</span>
-                <span className="ml-auto flex items-center gap-1 text-[var(--olo)]"><I.ArrowRight width={11} height={11} /></span>
+
+            <div className="absolute bottom-0 inset-x-0 p-6">
+              <div className="font-serif text-[32px] text-white leading-[1.02] font-light tracking-tight">{brief.title}</div>
+              <div className="text-[11.5px] text-white/65 font-light mt-2 line-clamp-1">{brief.subtitle}</div>
+              <div className="mt-4 flex items-center justify-between border-t border-white/15 pt-3">
+                <div className="flex items-center gap-3 text-white/75 text-[10px] tracking-[0.14em] uppercase">
+                  <span>{(brief.steps?.length ?? 0)} steps</span>
+                  <span className="w-px h-2.5 bg-white/25" />
+                  <span>{brief.timing}</span>
+                </div>
+                <span className="text-[var(--olo)] inline-flex items-center gap-1.5 text-[10px] tracking-[0.18em] uppercase">Read <I.ArrowRight width={11} height={11} /></span>
               </div>
             </div>
           </button>
         )}
       </div>
 
-      <SecRow label="Resume Templates" link="All templates" />
-      <div className="px-5 space-y-2">
-        {resourcesLoading && !resources && [0,1,2].map(i => <div key={i} className="h-[78px] bg-surface rounded-2xl animate-pulse" />)}
-        {resources?.resumes.map((r) => (
-          <a key={r.name} href={ensureTemplateUrl(r.templateUrl, r.name)} target="_blank" rel="noopener noreferrer" className="block bg-surface rounded-2xl p-4 shadow-[0_1px_5px_rgba(0,0,0,0.05)] flex gap-3 items-start hover:shadow-md transition">
-            <div className="w-11 h-14 rounded-md bg-gradient-to-br from-[var(--olo)]/20 to-[var(--navy)]/10 flex items-center justify-center text-[var(--olo)]">
-              <I.FileText width={18} height={18} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <div className="text-[13px] text-ink font-normal truncate">{r.name}</div>
-                {r.tag && <span className="text-[9px] text-[var(--olo)] tracking-wider">{r.tag}</span>}
+      {/* RESUME TEMPLATES — editorial list with serial numbers */}
+      <SectionHeader index="01" label="Resume Templates" />
+      <div className="px-5">
+        {resourcesLoading && !resources && [0,1,2].map(i => <div key={i} className="h-[64px] bg-surface rounded-none animate-pulse mb-px" />)}
+        <div className="divide-y divide-black/[0.07] dark:divide-white/[0.08] border-y border-black/[0.07] dark:border-white/[0.08]">
+          {resources?.resumes.map((r, i) => (
+            <a
+              key={r.name}
+              href={ensureTemplateUrl(r.templateUrl, r.name)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex gap-4 items-center py-4 group hover:bg-black/[0.015] dark:hover:bg-white/[0.02] transition px-1"
+            >
+              <span className="text-[10px] tracking-[0.22em] uppercase text-ink3/60 font-light tabular-nums w-6">{String(i + 1).padStart(2, "0")}</span>
+              <div className="flex-1 min-w-0">
+                <div className="font-serif text-[17px] text-ink font-light leading-tight truncate">{r.name}</div>
+                <div className="text-[11px] text-ink3 mt-0.5 font-light line-clamp-1">{r.desc}</div>
               </div>
-              <div className="text-[11px] text-ink3 mt-0.5 font-light">{r.desc}</div>
-              <span className="text-[11px] text-[var(--olo)] mt-1.5 inline-flex items-center gap-1">View template <I.ExternalLink width={10} height={10} /></span>
-            </div>
-          </a>
-        ))}
+              {r.tag && <span className="text-[9px] text-[var(--olo)] tracking-[0.18em] uppercase font-light hidden sm:inline">{r.tag}</span>}
+              <I.ExternalLink width={13} height={13} className="text-ink3 group-hover:text-[var(--olo)] transition flex-shrink-0" />
+            </a>
+          ))}
+        </div>
       </div>
 
-      <SecRow label="Interview Prep" />
-      <div className="px-5 grid grid-cols-2 gap-2">
+      {/* INTERVIEW PREP — monochrome quilted grid */}
+      <SectionHeader index="02" label="Interview Prep" />
+      <div className="px-5 grid grid-cols-2 gap-2.5">
         {resources?.drills.map((b, idx) => (
-          <button key={b.title} onClick={() => onOpenDrill(idx)} className={`bg-gradient-to-br ${themeMap[b.theme] || themeMap.navy} rounded-2xl p-4 text-left text-white aspect-square flex flex-col justify-between hover:scale-[1.02] transition`}>
-            <div>
-              <div className="text-[10px] tracking-[0.16em] uppercase opacity-70">{b.category}</div>
-              <div className="text-[10px] tracking-[0.14em] uppercase opacity-50 mt-0.5">{b.questions.length} questions</div>
+          <button
+            key={b.title}
+            onClick={() => onOpenDrill(idx)}
+            className="group relative aspect-square rounded-2xl overflow-hidden text-left p-4 flex flex-col justify-between transition active:scale-[0.98]"
+            style={{
+              background: idx % 2 === 0
+                ? "linear-gradient(155deg, var(--navy), color-mix(in oklab, var(--navy) 80%, black))"
+                : "linear-gradient(155deg, oklch(0.22 0.02 250), oklch(0.16 0.02 250))",
+            }}
+          >
+            <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-[var(--olo)]/15 blur-2xl opacity-0 group-hover:opacity-100 transition" />
+            <div className="relative">
+              <div className="text-[9px] tracking-[0.22em] uppercase text-white/55 font-light">{b.category}</div>
+              <div className="text-[9px] tracking-[0.18em] uppercase text-white/35 mt-0.5">{b.questions.length} questions</div>
             </div>
-            <div className="font-serif text-[19px] leading-tight">{b.title}</div>
+            <div className="relative font-serif text-[20px] text-white leading-[1.05] font-light tracking-tight">{b.title}</div>
           </button>
         ))}
       </div>
 
+      {/* LEXICON — refined bento */}
       {resources?.lexicon && resources.lexicon.length > 0 && (
         <>
-          <SecRow label="Insider Lexicon" link="Open" onLink={onOpenLexicon} />
+          <SectionHeader index="03" label="Insider Lexicon" link="Open" onLink={onOpenLexicon} />
           <div className="px-5">
-            <button onClick={onOpenLexicon} className="w-full bg-surface rounded-2xl shadow-[0_1px_5px_rgba(0,0,0,0.05)] overflow-hidden text-left active:scale-[0.99] transition">
-              <div className="px-4 py-3 border-b border-black/[0.05] dark:border-white/10 flex items-center gap-2">
-                <I.Sparkles width={11} height={11} className="text-[var(--olo)]" />
-                <div className="text-[10px] tracking-[0.18em] uppercase text-ink3">What insiders know · {resources.lexicon.length} terms</div>
-                <I.ArrowRight width={12} height={12} className="ml-auto text-[var(--olo)]" />
-              </div>
-              <div className="px-4 py-3 grid grid-cols-2 gap-2">
+            <button onClick={onOpenLexicon} className="w-full text-left active:scale-[0.99] transition">
+              <div className="grid grid-cols-2 gap-2">
                 {resources.lexicon.slice(0, 4).map((l, i) => (
-                  <div key={i} className="rounded-xl bg-black/[0.025] dark:bg-white/[0.04] px-3 py-2 min-h-[58px]">
-                    <div className="font-serif italic text-[13px] text-ink leading-snug line-clamp-2">{l.term}</div>
-                    <div className="text-[10px] text-ink3 mt-1">Tap to unpack</div>
+                  <div key={i} className="rounded-2xl bg-surface border border-black/[0.05] dark:border-white/[0.06] px-3.5 py-3 min-h-[78px] flex flex-col justify-between">
+                    <div className="font-serif italic text-[14px] text-ink leading-snug line-clamp-2 font-light">{l.term}</div>
+                    <div className="text-[9px] tracking-[0.2em] uppercase text-[var(--olo)] mt-2 font-light">Unpack</div>
                   </div>
                 ))}
               </div>
@@ -129,30 +146,47 @@ export function ResourcesScreen({ onOpenIndustryBrief, onOpenDrill, onOpenLexico
         </>
       )}
 
-      <SecRow label="AI-Sourced Articles" link="More" />
-      <div className="px-5 space-y-2">
+      {/* ARTICLES — editorial list */}
+      <SectionHeader index="04" label="Reading List" />
+      <div className="px-5 divide-y divide-black/[0.07] dark:divide-white/[0.08] border-y border-black/[0.07] dark:border-white/[0.08]">
         {resources?.articles.map((a) => (
-          <details key={a.title} className="bg-surface rounded-2xl p-4 shadow-[0_1px_5px_rgba(0,0,0,0.05)] group">
-            <summary className="cursor-pointer list-none">
-              <div className="font-serif italic text-[15px] text-ink leading-snug mb-1.5">{a.title}</div>
-              <div className="flex items-center gap-2 text-[11px] text-ink3 font-light">
-                <span className="flex items-center gap-1"><I.Sparkles width={11} height={11} className="text-[var(--olo)]" /> {a.source}</span>
-                <span className="ml-auto">{a.readTime}</span>
+          <details key={a.title} className="group py-4">
+            <summary className="cursor-pointer list-none flex items-baseline gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="font-serif italic text-[16px] text-ink leading-snug font-light">{a.title}</div>
+                <div className="flex items-center gap-2 text-[10px] text-ink3 font-light mt-1 tracking-wide">
+                  <span>{a.source}</span>
+                  <span className="w-px h-2.5 bg-black/15 dark:bg-white/15" />
+                  <span>{a.readTime}</span>
+                </div>
               </div>
+              <I.ChevronDown width={12} height={12} className="text-ink3 group-open:rotate-180 transition flex-shrink-0" />
             </summary>
-            <div className="mt-3 pt-3 border-t border-black/[0.05] dark:border-white/10 space-y-2.5">
-              <p className="text-[12px] text-ink2 leading-relaxed font-light">{a.summary}</p>
-              <div className="bg-[var(--olo)]/10 border-l-2 border-[var(--olo)] rounded-r-lg px-3 py-2">
-                <div className="text-[9px] tracking-[0.16em] uppercase text-[var(--olo)] font-medium mb-1">Why it matters</div>
-                <p className="text-[12px] text-ink leading-relaxed font-light">{a.whyItMatters}</p>
+            <div className="mt-3 pl-0 space-y-2.5">
+              <p className="text-[12.5px] text-ink2 leading-relaxed font-light">{a.summary}</p>
+              <div className="border-l border-[var(--olo)] pl-3">
+                <div className="text-[9px] tracking-[0.2em] uppercase text-[var(--olo)] font-medium mb-1">Why it matters</div>
+                <p className="text-[12.5px] text-ink leading-relaxed font-light">{a.whyItMatters}</p>
               </div>
               {a.articleUrl && (
-                <a href={a.articleUrl} target="_blank" rel="noopener noreferrer" className="text-[11px] text-[var(--olo)] inline-flex items-center gap-1">Read sources <I.ExternalLink width={10} height={10} /></a>
+                <a href={a.articleUrl} target="_blank" rel="noopener noreferrer" className="text-[10.5px] text-[var(--olo)] inline-flex items-center gap-1 tracking-[0.14em] uppercase">Sources <I.ExternalLink width={10} height={10} /></a>
               )}
             </div>
           </details>
         ))}
       </div>
+    </div>
+  );
+}
+
+function SectionHeader({ index, label, link, onLink }: { index: string; label: string; link?: string; onLink?: () => void }) {
+  return (
+    <div className="flex items-end justify-between px-5 pt-8 pb-3">
+      <div className="flex items-baseline gap-3">
+        <span className="text-[9.5px] tracking-[0.28em] uppercase text-ink3/70 font-light tabular-nums">{index}</span>
+        <span className="font-serif text-[18px] text-ink font-light leading-none">{label}</span>
+      </div>
+      {link && <button onClick={onLink} className="text-[9.5px] tracking-[0.22em] uppercase text-[var(--olo)] hover:underline">{link}</button>}
     </div>
   );
 }
