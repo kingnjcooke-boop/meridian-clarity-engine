@@ -143,14 +143,20 @@ Output ONLY tool calls.` },
       return !isNaN(t) ? t >= cutoffMs : true;
     });
 
-    // Resolve images in parallel — try og:image of articleUrl first; fall back to a real photographic stock.
+    // Resolve images: og:image of articleUrl → Wikipedia thumb of each keyword → branded SVG.
     const stories = await Promise.all(
       fresh.map(async (s: any, i: number) => {
         let img: string | null = null;
         if (typeof s.articleUrl === "string" && /^https?:\/\//i.test(s.articleUrl)) {
           img = await ogImage(s.articleUrl);
         }
-        if (!img) img = photoFallback(s.thumbnailKeywords || [], i + Date.parse(s.publishedAt || "") || i);
+        if (!img) {
+          for (const kw of (s.thumbnailKeywords || [])) {
+            img = await wikiThumb(kw);
+            if (img) break;
+          }
+        }
+        if (!img) img = brandedSvg(s.source || "Meridian", s.headline || "", i + (Date.parse(s.publishedAt || "") || i));
         return { ...s, id: i, img };
       })
     );
