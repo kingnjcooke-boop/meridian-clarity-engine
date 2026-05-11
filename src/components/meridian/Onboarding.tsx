@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { MeridianMark, I } from "./icons";
 import { supabase } from "@/integrations/supabase/client";
+import { AuthScreen } from "./AuthScreen";
 
 export type OnboardingData = {
   mode: "signup" | "signin";
@@ -50,9 +51,24 @@ const STAGES = [
   "Career Switcher",
 ];
 
-export function Onboarding({ onDone }: { onDone: (d: OnboardingData) => void }) {
-  const [step, setStep] = useState(0);
-  const [data, setData] = useState<OnboardingData>({
+export function Onboarding({
+  onDone,
+  initial = null,
+  requireAuth = false,
+  skipAuthSteps = false,
+}: {
+  onDone: (d: OnboardingData) => void;
+  initial?: OnboardingData | null;
+  requireAuth?: boolean;
+  skipAuthSteps?: boolean;
+}) {
+  // Steps:
+  // 0 = welcome (only when requireAuth and no session)
+  // 0.5 = auth screen (handled separately below)
+  // 1 = industry, 2 = current, 3 = niche, 4 = target, 5 = employers
+  const [authMode, setAuthMode] = useState<"signup" | "signin" | null>(requireAuth ? null : null);
+  const [step, setStep] = useState(skipAuthSteps ? 1 : 0);
+  const [data, setData] = useState<OnboardingData>(initial || {
     mode: "signup", name: "", email: "", industry: "", niche: "", current: "", target: "", employers: [],
   });
   const [animKey, setAnimKey] = useState(0);
@@ -77,31 +93,48 @@ export function Onboarding({ onDone }: { onDone: (d: OnboardingData) => void }) 
       .finally(() => setLoadingPers(false));
   }, [data.industry]);
 
-  const totalSteps = 8;
+  // If the user chose sign-up or sign-in on the welcome screen, render AuthScreen.
+  if (authMode) {
+    return (
+      <AuthScreen
+        initialMode={authMode}
+        onBack={() => setAuthMode(null)}
+        onAuthed={() => { /* MeridianApp's auth listener will pick up the session */ }}
+      />
+    );
+  }
+
+  // 5 calibration steps after auth: industry, current, niche, target, employers.
+  const calibrationStep = step; // 1..5 within calibration
+  const totalCalibration = 5;
+  const showHeader = step >= 1;
 
   return (
     <div className="flex h-full w-full flex-col bg-background">
-      {step > 0 && (
+      {showHeader && (
         <div className="flex items-center gap-2 px-6 pt-4">
-          <button onClick={back} className="text-ink3 hover:text-ink transition">
+          <button onClick={back} className="text-ink3 hover:text-ink transition" disabled={skipAuthSteps && step === 1}>
             <I.ChevronLeft width={20} height={20} />
           </button>
           <div className="flex-1 h-[2px] bg-black/[0.06] dark:bg-white/10 rounded">
-            <div className="h-full bg-[var(--olo)] rounded transition-all duration-500" style={{ width: `${(step / (totalSteps - 1)) * 100}%` }} />
+            <div className="h-full bg-[var(--olo)] rounded transition-all duration-500" style={{ width: `${(calibrationStep / totalCalibration) * 100}%` }} />
           </div>
-          <span className="text-[10px] tracking-[0.18em] text-ink3 uppercase">{step}/{totalSteps - 1}</span>
+          <span className="text-[10px] tracking-[0.18em] text-ink3 uppercase">{calibrationStep}/{totalCalibration}</span>
         </div>
       )}
 
       <div key={animKey} className="fade-in flex-1 flex flex-col px-7 pt-10 pb-8 overflow-y-auto no-scrollbar">
-        {step === 0 && <Welcome onSignUp={() => { setData(d => ({...d, mode: "signup"})); next(); }} onSignIn={() => { setData(d => ({...d, mode: "signin"})); next(); }} />}
-        {step === 1 && <NameStep data={data} setData={setData} onNext={next} />}
-        {step === 2 && <EmailStep data={data} setData={setData} onNext={next} />}
-        {step === 3 && <PickStep label="Which industry are you positioning for?" sub="We benchmark you against placed candidates here." options={INDUSTRIES} value={data.industry} onSelect={(v) => { setData(d => ({...d, industry: v})); setTimeout(next, 200); }} />}
-        {step === 4 && <CurrentStep value={data.current} onChange={(v) => setData(d => ({...d, current: v}))} onNext={next} />}
-        {step === 5 && <NicheStep loading={loadingPers} niches={niches} value={data.niche} onSelect={(v) => { setData(d => ({...d, niche: v})); setTimeout(next, 200); }} />}
-        {step === 6 && <TargetStep examples={targetExamples} value={data.target} onChange={(v) => setData(d => ({...d, target: v}))} onNext={next} />}
-        {step === 7 && <EmployersStep loading={loadingPers} suggestions={employerSugg} selected={data.employers} setSelected={(arr) => setData(d => ({...d, employers: arr}))} onDone={() => onDone(data)} />}
+        {step === 0 && (
+          <Welcome
+            onSignUp={() => { setData(d => ({...d, mode: "signup"})); setAuthMode("signup"); }}
+            onSignIn={() => { setData(d => ({...d, mode: "signin"})); setAuthMode("signin"); }}
+          />
+        )}
+        {step === 1 && <PickStep label="Which industry are you positioning for?" sub="We benchmark you against placed candidates here." options={INDUSTRIES} value={data.industry} onSelect={(v) => { setData(d => ({...d, industry: v})); setTimeout(next, 200); }} />}
+        {step === 2 && <CurrentStep value={data.current} onChange={(v) => setData(d => ({...d, current: v}))} onNext={next} />}
+        {step === 3 && <NicheStep loading={loadingPers} niches={niches} value={data.niche} onSelect={(v) => { setData(d => ({...d, niche: v})); setTimeout(next, 200); }} />}
+        {step === 4 && <TargetStep examples={targetExamples} value={data.target} onChange={(v) => setData(d => ({...d, target: v}))} onNext={next} />}
+        {step === 5 && <EmployersStep loading={loadingPers} suggestions={employerSugg} selected={data.employers} setSelected={(arr) => setData(d => ({...d, employers: arr}))} onDone={() => onDone(data)} />}
       </div>
     </div>
   );

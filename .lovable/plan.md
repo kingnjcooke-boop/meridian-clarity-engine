@@ -1,53 +1,105 @@
-Four scoped fixes — all frontend + one edge function tweak.
+# Meridian: From Demo to Category
 
-## 1. Knob — centered score, frosted shrunk button, counter-clockwise arc
+Five-phase plan to turn the current mock into a defensible product. Each phase is shippable on its own; do them in order so later phases build on earlier infrastructure.
 
-File: `src/components/meridian/MeridianCompass.tsx`
+---
 
-- Shrink knob from 224px → 180px.
-- Replace solid neumorphic dial with a frosted-glass surface: translucent `rgba(10,14,22,0.42)` + `backdrop-filter: blur(22px) saturate(160%)`, hairline white inner border, soft outer shadow. Drop the heavy radial-gradient body.
-- Move the progress ring to the **outer rim** (radius ~ size/2 − 4) on an `SVG` sized to the full button. Stroke ~6px.
-- Reverse arc direction to **counter-clockwise** by negating sweep: keep the gap at top, but compute dash on a path that runs CCW (set `transform="scale(-1,1)"` on the progress circle, or rotate +135° instead of −135° and negate the angle math). The white indicator dot sits on the rim and travels CCW as the score fills.
-- Glow remains on the rim only (drop-shadow on the stroke). Inside of the knob stays calm — no extra rings.
-- Re-center the readout: replace the current `absolute inset-0 flex-col flex items-center justify-center` block with a perfectly centered stack using `inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; text-align:center;` and remove the `mt-2 / mt-3` offsets that visually push the number off-center. Score number sits on the geometric center; sub-label and trend/gaps row balance above/below symmetrically so the optical center matches the geometric center.
-- Tap pill shrinks and softens (smaller, lower opacity).
+## Phase 1 — Real Auth + Persistence Foundation
 
-## 2. Images — switch from LoremFlickr to Wikipedia REST thumbnails
+**Why first:** every other feature (history, cohort, weekly PDF) requires a real user identity and a database. `localStorage` is not a session.
 
-Root cause: LoremFlickr is being blocked / returns nothing in the preview, so cards fall back to broken images. og:image scrape works only when the AI returns a real `articleUrl`, which is rare.
+**Backend (Lovable Cloud / Supabase):**
+- Enable email/password + Google OAuth via managed social auth.
+- New tables (all RLS-protected, `user_id = auth.uid()`):
+  - `profiles` — name, target, industry, niche, current stage, employers, resume_name, resume_text, onboarded_at
+  - `scores` — score, percentile, tier, trend, gaps_count, summary, gaps (jsonb), strengths (jsonb), roadmap (jsonb), created_at *(append-only history)*
+  - `actions` — roadmap action snapshot, status (`todo`/`in_progress`/`done`), artifact_url, artifact_text, completed_at, pts_awarded
+  - `events` — generic activity log (login, score_run, action_completed, story_dismissed) for streaks and the weekly digest
+  - `stories_dismissed` — per-user dismissals so the brief never re-shows the same item
+- Trigger: auto-create `profiles` row on signup.
 
-File: `supabase/functions/meridian-news/index.ts`
+**Frontend:**
+- New `/login`, `/signup`, `/reset-password` routes.
+- `_authenticated` layout route guards the app; unauthenticated → `/login`.
+- Replace `localStorage` hydration in `MeridianApp.tsx` with Supabase session + a `useProfile()` hook that loads from `profiles`.
+- Onboarding writes to `profiles` on completion; resume upload writes `resume_name`/`resume_text` to `profiles`.
 
-- Add a `wikiThumb(keyword)` helper that calls `https://en.wikipedia.org/api/rest_v1/page/summary/{title}` and returns `thumbnail.source` (or `originalimage.source`) — these are real photographs of people, places, brands, agencies (e.g. "Federal Trade Commission", "Gibson Dunn", "Latham & Watkins"). Free, no auth, fast, CORS-clean, served from `upload.wikimedia.org`.
-- Resolution order per story: (a) og:image of `articleUrl` if present and reachable, (b) Wikipedia thumb for the most specific keyword in `thumbnailKeywords`, (c) Wikipedia thumb for the next keyword, (d) final fallback: a branded SVG data-URI with the source name (so we never return a broken image).
-- Tighten the AI prompt: `thumbnailKeywords` MUST be real Wikipedia-resolvable entities (agency names, firm names, named people, named locations) — no abstractions.
+---
 
-Resources brief image already uses a branded SVG (works). Leave it but reuse the same `wikiThumb` for `industryBrief.logoKeyword` so the brief gets a real photo when possible, falling back to the SVG.
+## Phase 2 — Deterministic Score + History
 
-File: `supabase/functions/meridian-resources/index.ts` — wire `wikiThumb(logoKeyword)` ahead of `briefImage(...)`.
+**Why:** score swings between page loads are the credibility killer. Anchor it.
 
-## 3. Industry Brief — succinct copy
+- `meridian-score` edge function changes:
+  - Add `temperature: 0`, fixed seed, and a stable hash of `(resume_text + target + industry + niche)` as an idempotency key.
+  - Before calling the model, check `scores` for an existing row with the same `input_hash` in the last 7 days → return cached row.
+  - On new run, **persist** the result to `scores` instead of returning ephemerally.
+- Position screen reads from `scores` (latest row) and shows a real **7-day trend sparkline** from history.
+- "Reposition" / resume re-upload creates a new `scores` row, so trend reflects actual user action — not LLM dice.
 
-File: `supabase/functions/meridian-resources/index.ts`
+---
 
-Add hard copy constraints to the system prompt for the brief:
-- `title`: max 7 words.
-- `subtitle`: max 12 words, single phrase.
-- `whereYouAre` / `whereYouAreGoing`: max 2 sentences each.
-- `timing` / `investment`: max 5 words.
-- step `title`: max 5 words; step `what`: max 2 sentences; step `why`: max 1 sentence; step `signal`: max 8 words.
-- `marketContext`: max 2 sentences.
-- Lead every field with the most valuable word. No filler, no passive voice, no "It's important to…".
+## Phase 3 — Verified Action Loops
 
-File: `src/components/meridian/screens-resources-roadmap.tsx`
+**Why:** this is what turns a dashboard into a coach. Score moves *because* of artifacts.
 
-- Trim the focal card meta row: drop the verbose "X step walkthrough" → "X steps", keep timing chip, drop the "Open →" inline (it's already a button). Smaller meta font (10px).
-- In `IndustryBriefDetail`, swap section headers to one-word labels ("Now", "Next", "Path", "Market"). Clamp step descriptions with `line-clamp-3` on `what`, `line-clamp-2` on `why`.
+- Each roadmap card gets a "Mark complete" flow that requires an artifact:
+  - Text paste (draft memo, outreach message), OR
+  - URL (published piece, LinkedIn post, calendly booking), OR
+  - File upload (PDF draft) → new `artifacts` storage bucket, user-scoped RLS.
+- New edge function `meridian-verify-action`: takes the artifact + action context, asks Gemini Flash to grade it 0–100 against the action's stated `signal`. Returns `verified: bool`, `feedback: string`, `pts_awarded: number`.
+- On verify success: insert into `actions` (status=`done`), insert `events` row, and trigger a fresh `scores` row reflecting the new signal. Roadmap card flips to a completed state with the grader's feedback.
+- This kills the "score is astrology" problem — every movement has a receipt.
 
-## 4. Verification
+---
 
-- Deploy the two edge functions.
-- Hit `/meridian-news` and `/meridian-resources` with `curl_edge_functions`, confirm `img` fields resolve to `upload.wikimedia.org` URLs.
-- Preview the Brief card + knob; confirm score is geometrically centered and the rim fills CCW.
+## Phase 4 — Cohort Wall + Real Sources
 
-No DB changes, no auth changes, no new dependencies.
+**Why:** social comparison is the single most addictive mechanic in career products. And the false "≥3 sources agree" claim has to die before it gets the project a C&D.
+
+**Cohort:**
+- New `cohort_peers` table seeded per `(industry, target)` pair with 6 anonymized synthetic profiles (real signal mix, fake names) until we have real users in each vertical.
+- "Network" tab gets a **Cohort** section: 6 cards showing peer initials, tier, top 2 signals, top gap. Live count of peers ahead/behind.
+- As real users accumulate per vertical, gradually replace synthetic peers with anonymized real ones (opt-in flag on `profiles`).
+
+**Sources:**
+- Strip the "AI-Verified Intelligence / ≥3 sources agree" claim from `screens-alerts-network.tsx` and the news edge function prompt.
+- `meridian-news` returns real `source_url`s from the model's web-grounded output; UI renders them as clickable citations. If we can't ground it, we don't claim it.
+- Replace generic Unsplash hero images with a curated allowlist of high-quality, role-appropriate images (or omit imagery entirely on intel cards — editorial restraint > AI slop).
+
+---
+
+## Phase 5 — The Weekly Artifact (B2C virality + B2B wedge)
+
+**Why:** the Friday PDF is the forwardable object. Mentors, advisors, parents, career deans see it. That's the loop.
+
+- New edge function `meridian-weekly-digest` runs every Friday 7am user-local via pg_cron + a `/api/public/cron/weekly-digest` server route.
+- For each active user it generates a 2-page PDF (server-side via `@react-pdf/renderer`):
+  - Page 1: "Your week" — score delta, tier, completed actions w/ grades, cohort position
+  - Page 2: "Next week" — 3 prioritized moves, 2 firms hiring against the profile
+- Stored in `weekly_briefs` table + `briefs` storage bucket. Emailed via Resend (transactional email scaffold).
+- In-app "Briefs" archive on the Resources screen.
+- This PDF is also the artifact we hand to schools/CMCs for B2B distribution.
+
+---
+
+## Technical Notes
+
+- All edge functions stay `verify_jwt = false` only where required; protected ones (`meridian-verify-action`, `meridian-weekly-digest`) move behind JWT.
+- Roles table (`user_roles` + `has_role` security-definer fn) added in Phase 1 even if unused — anticipates Phase 5 admin/coach views without a future migration.
+- `tierFromScore` / `scalePts` helpers move from client into a `meridian-utils` shared module so edge functions, the weekly digest, and the UI all agree on tier math.
+- `MeridianDataContext` gets refactored to read from React Query backed by Supabase, not from edge function calls cached in component state.
+
+---
+
+## Suggested Sequencing
+
+| Phase | Effort | Unblocks |
+|---|---|---|
+| 1 — Auth + tables | 1 session | Everything |
+| 2 — Deterministic score + history | 1 session | Trust, trend, Phase 5 |
+| 3 — Verified actions | 2 sessions | The product's actual coaching loop |
+| 4 — Cohort + kill false claims | 1 session | Stickiness, legal safety |
+| 5 — Weekly PDF + email | 2 sessions | Virality, B2B pitch |
+
+I'll start with **Phase 1** on approval — real auth and the database schema — because nothing else is honest until users have real identities and their data actually persists.
