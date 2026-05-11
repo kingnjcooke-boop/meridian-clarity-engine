@@ -117,8 +117,10 @@ Generate:
     payload.resumes = (payload.resumes || []).map((r: any) => ({ ...r, templateUrl: sanitize(r.templateUrl, `https://www.bing.com/search?q=${encodeURIComponent(r.name + " resume template")}`) }));
     payload.articles = (payload.articles || []).map((a: any) => ({ ...a, articleUrl: sanitize(a.articleUrl, `https://www.bing.com/search?q=${encodeURIComponent(a.title)}`) }));
 
-    if (payload.industryBrief?.logoKeyword) {
-      payload.industryBrief.image = briefImage(payload.industryBrief, target);
+    if (payload.industryBrief) {
+      const kw = payload.industryBrief.logoKeyword;
+      const photo = kw ? await wikiThumb(kw) : null;
+      payload.industryBrief.image = photo || briefImage(payload.industryBrief, target);
     }
     payload.drills = (payload.drills || []).map((d: any) => ({ ...d, count: (d.questions || []).length }));
     return new Response(JSON.stringify(payload), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
