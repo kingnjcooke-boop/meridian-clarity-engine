@@ -45,6 +45,7 @@ export function MeridianApp() {
       ) : (
         <MeridianDataProvider user={user}>
           <div className="flex-1 flex flex-col overflow-hidden relative">
+            <div className="flex-1 flex flex-col overflow-hidden pb-20">
             {overlay.kind === "story" && <StoryDetail id={overlay.id} onBack={() => setOverlay({ kind: "none" })} />}
             {overlay.kind === "action" && <ActionDetail id={overlay.id} onBack={() => setOverlay({ kind: "none" })} />}
             {overlay.kind === "drill" && <DrillDetail idx={overlay.idx} onBack={() => setOverlay({ kind: "none" })} />}
@@ -89,11 +90,12 @@ export function MeridianApp() {
                 }}
               />
             )}
+            </div>
+            <BottomNav
+              tab={tab}
+              onChange={(t) => { setOverlay({ kind: "none" }); setTab(t); }}
+            />
           </div>
-          <BottomNav
-            tab={tab}
-            onChange={(t) => { setOverlay({ kind: "none" }); setTab(t); }}
-          />
         </MeridianDataProvider>
       )}
     </MobileFrame>

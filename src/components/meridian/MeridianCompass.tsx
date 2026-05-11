@@ -1,5 +1,5 @@
-// Floating compass widget — small, no colored container, just a delicate SVG
-// compass with three tiny stat callouts. Tap to open Position.
+// Texturized neumorphic knob — score in the center, gradient arc, tactile feel.
+// Tap to open positioning.
 
 type Props = {
   score?: string;
@@ -16,83 +16,130 @@ export function MeridianCompass({
   score = "—",
   scoreSub = "Score",
   trend = "—",
-  trendSub = "7-Day",
+  trendSub = "7d",
   gaps = "—",
   gapsSub = "Gaps",
   onClick,
   locked,
 }: Props) {
-  const stroke = "currentColor";
-  const size = 180;
+  const size = 224;
+  const numeric = Number(score);
+  const pct = Number.isFinite(numeric) ? Math.max(0, Math.min(100, numeric)) / 100 : 0;
+  const R = 92;
+  const C = 2 * Math.PI * R;
+  // Arc spans 270° (top-left → top-right going around bottom)
+  const arcLen = C * 0.75;
+  const arcOffset = C * 0.125; // rotate gap to top
+  const dash = `${arcLen * pct} ${C}`;
 
   return (
     <button
       onClick={onClick}
-      className="block mx-auto text-left relative group text-ink2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--olo)]/50 rounded-full"
+      className="block mx-auto relative group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--olo)]/50 rounded-full"
       style={{ width: size, height: size }}
       aria-label="Open positioning"
     >
-      <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full">
-        <g stroke={stroke} fill="none" strokeWidth="0.7" opacity="0.55">
-          <circle cx="100" cy="100" r="68" />
-          <circle cx="100" cy="100" r="56" opacity="0.5" />
-        </g>
-        <g stroke={stroke} strokeWidth="0.6" opacity="0.35" strokeDasharray="2 4">
-          <line x1="100" y1="22" x2="100" y2="178" />
-          <line x1="22" y1="100" x2="178" y2="100" />
-        </g>
-        {Array.from({ length: 8 }).map((_, i) => {
-          const a = (i * Math.PI) / 4;
-          const r1 = 68, r2 = 74;
-          return (
-            <line
-              key={i}
-              x1={100 + Math.cos(a) * r1}
-              y1={100 + Math.sin(a) * r1}
-              x2={100 + Math.cos(a) * r2}
-              y2={100 + Math.sin(a) * r2}
-              stroke={stroke}
-              strokeWidth="1"
-              opacity="0.6"
-            />
-          );
-        })}
-        {/* Needle */}
-        <polygon points="100,40 104,100 96,100" fill="var(--olo)" />
-        <polygon points="100,160 104,100 96,100" fill="currentColor" opacity="0.25" />
-        <circle cx="100" cy="100" r="3.5" fill="var(--background)" stroke="var(--olo)" strokeWidth="1.2" />
+      {/* Outer dial — texturized */}
+      <div
+        className="absolute inset-0 rounded-full"
+        style={{
+          background:
+            "radial-gradient(circle at 30% 28%, oklch(0.32 0.04 250) 0%, oklch(0.18 0.03 250) 55%, oklch(0.11 0.025 250) 100%)",
+          boxShadow:
+            "inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -14px 30px rgba(0,0,0,0.55), 0 22px 44px rgba(0,0,0,0.35), 0 2px 0 rgba(255,255,255,0.04)",
+        }}
+      />
+      {/* Subtle brushed texture */}
+      <svg className="absolute inset-0 w-full h-full rounded-full opacity-[0.18] mix-blend-overlay pointer-events-none" viewBox="0 0 200 200" aria-hidden>
+        <defs>
+          <radialGradient id="grain" cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stopColor="white" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="white" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <circle cx="100" cy="100" r="100" fill="url(#grain)" />
       </svg>
 
-      <div className="absolute inset-[46px] rounded-full border border-[var(--olo)]/20 bg-[var(--olo)]/5 opacity-0 group-hover:opacity-100 group-active:opacity-100 transition" />
+      {/* Inner well */}
+      <div
+        className="absolute rounded-full"
+        style={{
+          inset: 16,
+          background:
+            "radial-gradient(circle at 35% 30%, oklch(0.22 0.03 250) 0%, oklch(0.12 0.025 250) 70%)",
+          boxShadow:
+            "inset 0 2px 6px rgba(0,0,0,0.7), inset 0 -1px 0 rgba(255,255,255,0.06)",
+        }}
+      />
 
-      {/* North — Score */}
-      <Stat style={{ top: -4, left: "50%", transform: "translateX(-50%)" }} n={score} sub={scoreSub} accent />
-      {/* East — Trend */}
-      <Stat style={{ top: "50%", right: -10, transform: "translateY(-50%)" }} n={trend} sub={trendSub} />
-      {/* South — Gaps */}
-      <Stat style={{ bottom: -4, left: "50%", transform: "translateX(-50%)" }} n={gaps} sub={gapsSub} warn />
+      {/* Progress arc */}
+      <svg className="absolute inset-0 w-full h-full -rotate-[135deg]" viewBox="0 0 200 200" aria-hidden>
+        <defs>
+          <linearGradient id="arcG" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0%" stopColor="var(--olo)" />
+            <stop offset="100%" stopColor="oklch(0.78 0.13 60)" />
+          </linearGradient>
+        </defs>
+        <circle
+          cx="100"
+          cy="100"
+          r={R / 2}
+          fill="none"
+          stroke="rgba(255,255,255,0.05)"
+          strokeWidth="3"
+        />
+        <circle
+          cx="100"
+          cy="100"
+          r={R / 2}
+          fill="none"
+          stroke="url(#arcG)"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeDasharray={`${(C * 0.75 * pct) / 2} ${C}`}
+          style={{ filter: "drop-shadow(0 0 6px color-mix(in oklab, var(--olo) 65%, transparent))" }}
+        />
+        {/* indicator dot */}
+        {!locked && (
+          <circle
+            cx={100 + (R / 2) * Math.cos((Math.PI * 2 * 0.75 * pct))}
+            cy={100 + (R / 2) * Math.sin((Math.PI * 2 * 0.75 * pct))}
+            r="3.2"
+            fill="white"
+            style={{ filter: "drop-shadow(0 0 4px var(--olo))" }}
+          />
+        )}
+      </svg>
 
-      {locked && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-[9px] tracking-[0.22em] uppercase text-ink3">Locked</div>
-            <div className="text-[11px] text-ink2 mt-0.5 font-light">Tap to add resume</div>
-          </div>
-        </div>
-      )}
-      <div className="absolute left-1/2 -bottom-6 -translate-x-1/2 whitespace-nowrap rounded-full border border-[var(--olo)]/20 bg-background/80 px-2.5 py-1 text-[9px] uppercase tracking-[0.14em] text-[var(--olo)] shadow-sm opacity-90">
-        Tap to open
+      {/* Center reading */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        {locked ? (
+          <>
+            <div className="text-[9px] tracking-[0.24em] uppercase text-white/40">Locked</div>
+            <div className="text-[12px] text-white/85 font-light mt-1">Add resume</div>
+          </>
+        ) : (
+          <>
+            <div
+              className="tabular-nums leading-none text-white"
+              style={{ fontSize: 54, fontWeight: 300, fontFamily: "var(--font-sans)", letterSpacing: "-0.02em" }}
+            >
+              {score}
+            </div>
+            <div className="text-[9px] tracking-[0.22em] uppercase text-white/45 mt-2">{scoreSub}</div>
+            <div className="mt-3 flex items-center gap-3 text-[10px] text-white/70 tabular-nums">
+              <span><span className="text-[var(--olo)] font-medium">{trend}</span> <span className="text-white/40 uppercase tracking-[0.14em] text-[8.5px]">{trendSub}</span></span>
+              <span className="w-px h-2.5 bg-white/15" />
+              <span><span className="font-medium">{gaps}</span> <span className="text-white/40 uppercase tracking-[0.14em] text-[8.5px]">{gapsSub}</span></span>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Tap hint */}
+      <div className="absolute left-1/2 -bottom-6 -translate-x-1/2 whitespace-nowrap rounded-full bg-black/30 backdrop-blur-md border border-white/10 px-2.5 py-1 text-[9px] uppercase tracking-[0.16em] text-white/70">
+        Tap
       </div>
     </button>
-  );
-}
-
-function Stat({ style, n, sub, accent, warn }: any) {
-  const color = warn ? "var(--ember, #EF9F27)" : accent ? "var(--olo)" : "currentColor";
-  return (
-    <div className="absolute text-center" style={{ ...style, minWidth: 56 }}>
-      <div className="tabular-nums leading-none" style={{ color, fontSize: 18, fontWeight: 600, fontFamily: "var(--font-sans)" }}>{n}</div>
-      <div className="text-[9px] tracking-[0.16em] uppercase mt-0.5 text-ink3">{sub}</div>
-    </div>
   );
 }
