@@ -89,7 +89,7 @@ COPY RULES (strictly enforced):
 - badgeText: 1-3 words.
 
 Output ONLY tool calls.` },
-          { role: "user", content: `Generate ${count} CURRENT (last 3 weeks: ${cutoff} → ${todayStr}) news stories that someone targeting "${target}"${niche ? ` (${niche})` : ""} (${industry}, ${stage})${employers ? `, watching ${employers}` : ""} should track. For each: cite the real source publisher (Bloomberg Law, Reuters, Politico, FT, WSJ, Law360, Axios, etc.), and if you know a real article URL, return it in articleUrl. Provide thumbnailKeywords = 2-3 concrete photographic subjects (real people titles, locations, objects, brand names) that would appear in a news photo of this story — NOT abstractions like "growth" or "innovation". Urgency dot: #ef4444 high, #f59e0b medium, #10b981 watch.` }
+          { role: "user", content: `Generate ${count} CURRENT (last 3 weeks: ${cutoff} → ${todayStr}) news stories that someone targeting "${target}"${niche ? ` (${niche})` : ""} (${industry}, ${stage})${employers ? `, watching ${employers}` : ""} should track. For each: cite the real source publisher (Bloomberg Law, Reuters, Politico, FT, WSJ, Law360, Axios, etc.), and if you know a real article URL, return it in articleUrl. Provide thumbnailKeywords = 2-3 SPECIFIC NAMED ENTITIES that exist as Wikipedia articles — e.g. "Federal Trade Commission", "Gibson Dunn", "Lina Khan", "U.S. Capitol", "Latham & Watkins". NO abstractions, NO generic nouns like "growth" or "office". Order keywords most-specific-first. Urgency dot: #ef4444 high, #f59e0b medium, #10b981 watch.` }
         ],
         tools: [{
           type: "function",
