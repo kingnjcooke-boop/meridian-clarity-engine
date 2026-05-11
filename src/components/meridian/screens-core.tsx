@@ -356,37 +356,23 @@ export function PositionScreen({ user, onReposition, onUpdateResume, onBack }: {
 
       <SecRow label="Your Market Position" link="See all" />
 
-      <div className="mx-5 bg-[var(--navy)] rounded-3xl px-6 py-6 relative overflow-hidden">
-        <svg viewBox="0 0 64 80" width="200" height="320" className="absolute right-[-30px] top-1/2 -translate-y-1/2 pointer-events-none">
-          <line x1="32" y1="4" x2="32" y2="76" stroke="white" strokeWidth=".7" opacity=".06"/>
-          <circle cx="32" cy="40" r="24" stroke="white" strokeWidth=".7" fill="none" opacity=".06"/>
-        </svg>
-        <div className="text-[9px] tracking-[0.2em] uppercase text-white/30 mb-2.5">Positioning Score</div>
-        <div className="font-serif text-[88px] font-light text-white leading-[0.9] tracking-tight tabular-nums">{score}</div>
-        <div className="flex items-center gap-3.5 mt-2 flex-wrap">
-          <div className="inline-flex items-center gap-1.5 bg-[var(--olo-dim)] border border-[var(--olo)]/30 rounded-full px-2.5 py-1">
-            <I.TrendUp width={10} height={10} className="text-[var(--olo)]" />
-            <span className="text-[11px] text-[var(--olo)] tracking-wide">{scoreData ? tierFromScore(scoreData.score) : "—"}</span>
-          </div>
-          <svg width="84" height="28" viewBox="0 0 84 28">
-            <polyline points="0,24 14,18 28,21 42,11 56,7 70,3 84,1" fill="none" stroke="rgba(198,139,78,.45)" strokeWidth="1.2" strokeLinecap="round" />
-            <circle cx="84" cy="1" r="2.5" fill="var(--olo)" opacity=".7" />
-          </svg>
+      <CohortPositionPanel user={user} animScore={score} />
+
+      {scoreData?.summary && (
+        <div className="px-5 mt-4 text-[13px] text-ink2 font-light leading-relaxed italic" style={{ fontFamily: "var(--font-serif)" }}>
+          {scoreData.summary}
         </div>
-        <div className="text-[11px] text-white/40 mt-1.5 font-light leading-relaxed">Among {user.current || "early-career"} targeting {user.target || "your market"}</div>
-        {scoreData?.summary && (
-          <div className="text-[12px] text-white/70 mt-3 font-light leading-relaxed">{scoreData.summary}</div>
-        )}
-        {user.employers.length > 0 && (
-          <div className="flex items-center gap-1.5 mt-3.5 flex-wrap">
-            <span className="text-[10px] text-white/30 tracking-wider">Watching</span>
-            {user.employers.slice(0, 5).map((f) => (
-              <span key={f} className="text-[10px] text-white/55 bg-white/5 border border-white/10 rounded-full px-2 py-0.5">{f}</span>
-            ))}
-            {user.employers.length > 5 && <span className="text-[10px] text-white/40">+{user.employers.length - 5}</span>}
-          </div>
-        )}
-      </div>
+      )}
+
+      {user.employers.length > 0 && (
+        <div className="px-5 mt-3 flex items-center gap-1.5 flex-wrap">
+          <span className="text-[10px] text-ink3 tracking-wider uppercase">Watching</span>
+          {user.employers.slice(0, 5).map((f) => (
+            <span key={f} className="text-[10px] text-ink2 bg-black/[0.04] dark:bg-white/[0.06] rounded-full px-2 py-0.5">{f}</span>
+          ))}
+          {user.employers.length > 5 && <span className="text-[10px] text-ink3">+{user.employers.length - 5}</span>}
+        </div>
+      )}
 
       {scoreData?.strengths?.length ? (
         <>
