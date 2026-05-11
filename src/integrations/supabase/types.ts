@@ -14,16 +14,260 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      actions: {
+        Row: {
+          artifact_text: string | null
+          artifact_url: string | null
+          completed_at: string | null
+          created_at: string
+          feedback: string | null
+          gap: string | null
+          id: string
+          pts: number | null
+          pts_awarded: number | null
+          score_id: string | null
+          signal: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+          verified: boolean | null
+        }
+        Insert: {
+          artifact_text?: string | null
+          artifact_url?: string | null
+          completed_at?: string | null
+          created_at?: string
+          feedback?: string | null
+          gap?: string | null
+          id?: string
+          pts?: number | null
+          pts_awarded?: number | null
+          score_id?: string | null
+          signal?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+          verified?: boolean | null
+        }
+        Update: {
+          artifact_text?: string | null
+          artifact_url?: string | null
+          completed_at?: string | null
+          created_at?: string
+          feedback?: string | null
+          gap?: string | null
+          id?: string
+          pts?: number | null
+          pts_awarded?: number | null
+          score_id?: string | null
+          signal?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          verified?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "actions_score_id_fkey"
+            columns: ["score_id"]
+            isOneToOne: false
+            referencedRelation: "scores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          created_at: string
+          id: string
+          payload: Json | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          payload?: Json | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          payload?: Json | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          cohort_visible: boolean
+          created_at: string
+          current_stage: string | null
+          email: string | null
+          employers: string[] | null
+          id: string
+          industry: string | null
+          name: string | null
+          niche: string | null
+          onboarded: boolean
+          resume_name: string | null
+          resume_text: string | null
+          target: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cohort_visible?: boolean
+          created_at?: string
+          current_stage?: string | null
+          email?: string | null
+          employers?: string[] | null
+          id?: string
+          industry?: string | null
+          name?: string | null
+          niche?: string | null
+          onboarded?: boolean
+          resume_name?: string | null
+          resume_text?: string | null
+          target?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cohort_visible?: boolean
+          created_at?: string
+          current_stage?: string | null
+          email?: string | null
+          employers?: string[] | null
+          id?: string
+          industry?: string | null
+          name?: string | null
+          niche?: string | null
+          onboarded?: boolean
+          resume_name?: string | null
+          resume_text?: string | null
+          target?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      scores: {
+        Row: {
+          created_at: string
+          gaps: Json | null
+          gaps_count: number | null
+          gaps_priority: string | null
+          id: string
+          input_hash: string | null
+          percentile: string | null
+          roadmap: Json | null
+          score: number
+          strengths: Json | null
+          summary: string | null
+          tier: string | null
+          trend: number | null
+          trend_label: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          gaps?: Json | null
+          gaps_count?: number | null
+          gaps_priority?: string | null
+          id?: string
+          input_hash?: string | null
+          percentile?: string | null
+          roadmap?: Json | null
+          score: number
+          strengths?: Json | null
+          summary?: string | null
+          tier?: string | null
+          trend?: number | null
+          trend_label?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          gaps?: Json | null
+          gaps_count?: number | null
+          gaps_priority?: string | null
+          id?: string
+          input_hash?: string | null
+          percentile?: string | null
+          roadmap?: Json | null
+          score?: number
+          strengths?: Json | null
+          summary?: string | null
+          tier?: string | null
+          trend?: number | null
+          trend_label?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      stories_dismissed: {
+        Row: {
+          created_at: string
+          id: string
+          story_key: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          story_key: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          story_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "coach" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +394,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "coach", "user"],
+    },
   },
 } as const
