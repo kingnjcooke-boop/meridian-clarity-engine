@@ -70,13 +70,15 @@ export function BriefScreen({ user, dark, setDark, onOpenStory, onOpenRoadmap, o
         </h1>
       </div>
 
-      {/* Editorial Score Hero */}
+      {/* Editorial Score Hero with cohort distribution */}
       <div className="pt-5 pb-2">
         <ScoreHero
+          user={user}
           onClick={onOpenPosition}
           locked={!user.hasResume}
           loading={scoreLoading}
           score={scoreStr}
+          rawScore={hasScore ? scoreData!.score : null}
           tier={scoreSub}
           trend={trendStr}
           trendSub={trendSub}
