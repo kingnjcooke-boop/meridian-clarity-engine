@@ -90,11 +90,12 @@ export function MeridianApp() {
                 }}
               />
             )}
+            </div>
+            <BottomNav
+              tab={tab}
+              onChange={(t) => { setOverlay({ kind: "none" }); setTab(t); }}
+            />
           </div>
-          <BottomNav
-            tab={tab}
-            onChange={(t) => { setOverlay({ kind: "none" }); setTab(t); }}
-          />
         </MeridianDataProvider>
       )}
     </MobileFrame>
