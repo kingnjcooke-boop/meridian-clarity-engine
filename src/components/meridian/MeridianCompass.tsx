@@ -23,7 +23,7 @@ export function MeridianCompass({
   locked,
 }: Props) {
   const stroke = "currentColor";
-  const size = 200;
+  const size = 180;
 
   return (
     <button
