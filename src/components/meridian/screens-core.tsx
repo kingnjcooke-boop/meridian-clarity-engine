@@ -66,27 +66,22 @@ export function BriefScreen({ user, dark, setDark, onOpenStory, onOpenRoadmap, o
         <h1 className="text-[34px] leading-[1.05] font-semibold tracking-tight text-ink" style={{ fontFamily: "var(--font-sans)" }}>
           {greetingFor(firstName)}
         </h1>
-        <p className="text-[12.5px] text-ink2 mt-1 font-light">Here's where you stand today.</p>
       </div>
 
-      {/* Floating knob — no container */}
-      <div className="pt-3 pb-4">
-        <MeridianCompass
+      {/* Editorial Score Hero */}
+      <div className="pt-5 pb-2">
+        <ScoreHero
           onClick={onOpenPosition}
           locked={!user.hasResume}
+          loading={scoreLoading}
           score={scoreStr}
-          scoreSub={scoreSub}
+          tier={scoreSub}
           trend={trendStr}
           trendSub={trendSub}
           gaps={gapsStr}
           gapsSub={gapsSub}
-        />
-        <CandidateSnapshot
-          ready={Boolean(hasScore)}
           strength={scoreData?.strengths?.[0]}
           gap={scoreData?.gaps?.[0]?.title}
-          locked={!user.hasResume}
-          onOpen={onOpenPosition}
         />
       </div>
 
