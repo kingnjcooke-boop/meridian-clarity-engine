@@ -2,7 +2,6 @@ import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { I, MeridianMark } from "./icons";
 import type { OnboardingData } from "./Onboarding";
 import { useMeridianData, tierFromScore } from "./MeridianDataContext";
-import { MeridianCompass } from "./MeridianCompass";
 
 type StoryId = number;
 
@@ -20,14 +19,8 @@ export const ACTIONS = [
 
 function greetingFor(name: string) {
   const h = new Date().getHours();
-  const time = h < 5 ? "burning the midnight oil" : h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : h < 21 ? "Good evening" : "Up late";
-  const teasers = [
-    `${time}, ${name}.`,
-    `${time}, ${name} — ready to move?`,
-    `Hey ${name}.`,
-    `${time}, ${name}. Markets don't wait.`,
-  ];
-  return teasers[(new Date().getDate()) % teasers.length];
+  const time = h < 5 ? "Up late" : h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : h < 21 ? "Good evening" : "Up late";
+  return `${time}, ${name}.`;
 }
 
 export function BriefScreen({ user, dark, setDark, onOpenStory, onOpenRoadmap, onOpenChat, onOpenPosition }: { user: OnboardingData; dark: boolean; setDark: Dispatch<SetStateAction<boolean>>; onOpenStory: (id: StoryId) => void; onOpenRoadmap: () => void; onOpenChat: () => void; onOpenPosition: () => void; }) {
@@ -73,27 +66,22 @@ export function BriefScreen({ user, dark, setDark, onOpenStory, onOpenRoadmap, o
         <h1 className="text-[34px] leading-[1.05] font-semibold tracking-tight text-ink" style={{ fontFamily: "var(--font-sans)" }}>
           {greetingFor(firstName)}
         </h1>
-        <p className="text-[12.5px] text-ink2 mt-1 font-light">Here's where you stand today.</p>
       </div>
 
-      {/* Floating knob — no container */}
-      <div className="pt-3 pb-4">
-        <MeridianCompass
+      {/* Editorial Score Hero */}
+      <div className="pt-5 pb-2">
+        <ScoreHero
           onClick={onOpenPosition}
           locked={!user.hasResume}
+          loading={scoreLoading}
           score={scoreStr}
-          scoreSub={scoreSub}
+          tier={scoreSub}
           trend={trendStr}
           trendSub={trendSub}
           gaps={gapsStr}
           gapsSub={gapsSub}
-        />
-        <CandidateSnapshot
-          ready={Boolean(hasScore)}
           strength={scoreData?.strengths?.[0]}
           gap={scoreData?.gaps?.[0]?.title}
-          locked={!user.hasResume}
-          onOpen={onOpenPosition}
         />
       </div>
 
@@ -220,24 +208,106 @@ export function SecRow({ label, link, onLink }: { label: string; link?: string; 
   );
 }
 
-function CandidateSnapshot({ ready, strength, gap, locked, onOpen }: { ready: boolean; strength?: string; gap?: string; locked?: boolean; onOpen: () => void }) {
-  const trim = (s?: string, n = 38) => (s ? (s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s) : "");
-  const left = ready ? trim(strength) || "Signal locked" : locked ? "Resume needed" : "Calibrating";
-  const right = ready ? trim(gap) || "Ranking gaps" : locked ? "Tap to upload" : "Benchmarking";
+function ScoreHero({
+  score, tier, trend, trendSub, gaps, gapsSub, strength, gap,
+  locked, loading, onClick,
+}: {
+  score: string; tier: string; trend: string; trendSub: string; gaps: string; gapsSub: string;
+  strength?: string; gap?: string; locked?: boolean; loading?: boolean; onClick: () => void;
+}) {
+  const trim = (s?: string, n = 44) => (s ? (s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s) : "");
+  const pct = (() => { const n = Number(score); return Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 0; })();
+
   return (
-    <div className="px-6 mt-8">
-      <button onClick={onOpen} className="grid grid-cols-2 gap-2 w-full text-left group" aria-label="Open positioning">
-        <div className="rounded-xl bg-surface/70 border border-black/[0.05] dark:border-white/[0.08] px-3 py-2.5 shadow-[0_1px_5px_rgba(0,0,0,0.04)]">
-          <div className="text-[8.5px] tracking-[0.2em] uppercase text-[var(--olo)] mb-1">Strength</div>
-          <div className="text-[12px] leading-snug text-ink font-light line-clamp-2">{left}</div>
+    <button onClick={onClick} className="block w-full text-left group focus:outline-none" aria-label="Open positioning">
+      <div className="px-5">
+        {/* Eyebrow */}
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[9.5px] tracking-[0.28em] uppercase text-ink3 font-light">Positioning Index</span>
+          <span className="text-[9.5px] tracking-[0.22em] uppercase text-ink3/70 group-hover:text-[var(--olo)] transition inline-flex items-center gap-1">
+            Open <I.ArrowRight width={9} height={9} />
+          </span>
         </div>
-        <div className="rounded-xl bg-surface/70 border border-[var(--olo)]/20 px-3 py-2.5 shadow-[0_1px_5px_rgba(0,0,0,0.04)] relative">
-          <div className="absolute right-2 top-2 text-[var(--olo)] opacity-70 group-active:translate-x-0.5 transition"><I.ArrowRight width={11} height={11} /></div>
-          <div className="text-[8.5px] tracking-[0.2em] uppercase text-ink3 mb-1">Gap</div>
-          <div className="text-[12px] leading-snug text-ink font-light line-clamp-2 pr-3">{right}</div>
+
+        {/* Editorial numeral + tier */}
+        <div className="flex items-end gap-5">
+          <div
+            className="tabular-nums text-ink leading-none"
+            style={{ fontFamily: "var(--font-serif)", fontWeight: 300, fontSize: 96, letterSpacing: "-0.04em" }}
+          >
+            {locked ? "—" : (loading ? "·" : score)}
+          </div>
+          <div className="pb-3 flex-1 min-w-0">
+            <div className="font-serif italic text-[22px] text-ink leading-none font-light truncate">
+              {locked ? "Locked" : tier}
+            </div>
+            <div className="text-[10px] tracking-[0.22em] uppercase text-ink3 mt-1.5 font-light">
+              {locked ? "Add resume" : "of 100"}
+            </div>
+          </div>
         </div>
-      </button>
-    </div>
+
+        {/* Hairline rule + progress */}
+        <div className="relative mt-5 mb-4 h-[1px] bg-black/8 dark:bg-white/10">
+          {!locked && pct > 0 && (
+            <div
+              className="absolute left-0 top-1/2 -translate-y-1/2 h-[1px]"
+              style={{
+                width: `${pct}%`,
+                background: "linear-gradient(90deg, var(--olo), oklch(0.82 0.14 60))",
+                boxShadow: "0 0 8px color-mix(in oklab, var(--olo) 50%, transparent)",
+              }}
+            />
+          )}
+          {!locked && pct > 0 && (
+            <div
+              className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[var(--olo)]"
+              style={{ left: `calc(${pct}% - 3px)`, boxShadow: "0 0 8px var(--olo)" }}
+            />
+          )}
+        </div>
+
+        {/* Inline metric trio */}
+        <div className="grid grid-cols-3 divide-x divide-black/[0.07] dark:divide-white/[0.08]">
+          <div className="pr-3">
+            <div className="text-[8.5px] tracking-[0.22em] uppercase text-ink3 font-light">{trendSub}</div>
+            <div className="font-serif text-[20px] text-[var(--olo)] font-light leading-tight mt-0.5 tabular-nums">{locked ? "—" : trend}</div>
+          </div>
+          <div className="px-3">
+            <div className="text-[8.5px] tracking-[0.22em] uppercase text-ink3 font-light">{gapsSub}</div>
+            <div className="font-serif text-[20px] text-ink font-light leading-tight mt-0.5 tabular-nums">{locked ? "—" : gaps}</div>
+          </div>
+          <div className="pl-3">
+            <div className="text-[8.5px] tracking-[0.22em] uppercase text-ink3 font-light">Tier</div>
+            <div className="font-serif italic text-[15px] text-ink font-light leading-tight mt-1 truncate">{locked ? "—" : tier}</div>
+          </div>
+        </div>
+
+        {/* Strength + Gap line — minimalist editorial */}
+        {(!locked && (strength || gap)) && (
+          <div className="mt-5 space-y-2">
+            {strength && (
+              <div className="flex gap-3 items-baseline">
+                <span className="text-[8.5px] tracking-[0.22em] uppercase text-[var(--olo)] font-medium w-[58px] flex-shrink-0">Strength</span>
+                <span className="text-[12.5px] text-ink leading-snug font-light line-clamp-1">{trim(strength)}</span>
+              </div>
+            )}
+            {gap && (
+              <div className="flex gap-3 items-baseline">
+                <span className="text-[8.5px] tracking-[0.22em] uppercase text-ink3 font-medium w-[58px] flex-shrink-0">Gap</span>
+                <span className="text-[12.5px] text-ink leading-snug font-light line-clamp-1">{trim(gap)}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {locked && (
+          <div className="mt-4 text-[12px] text-ink2 font-light">
+            Tap to upload your resume — we'll calibrate your position against placed candidates.
+          </div>
+        )}
+      </div>
+    </button>
   );
 }
 

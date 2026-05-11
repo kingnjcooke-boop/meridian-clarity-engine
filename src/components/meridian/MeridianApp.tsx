@@ -24,7 +24,13 @@ type Overlay =
   | { kind: "reposition" };
 
 export function MeridianApp() {
-  const [user, setUser] = useState<OnboardingData | null>(null);
+  const [user, setUser] = useState<OnboardingData | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = window.localStorage.getItem("meridian.user");
+      return raw ? (JSON.parse(raw) as OnboardingData) : null;
+    } catch { return null; }
+  });
   const [tab, setTab] = useState<Tab>("brief");
   const [overlay, setOverlay] = useState<Overlay>({ kind: "none" });
   const [dark, setDark] = useState(false);
@@ -32,6 +38,15 @@ export function MeridianApp() {
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
   }, [dark]);
+
+  // Persist session — keeps users logged in across reloads.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if (user) window.localStorage.setItem("meridian.user", JSON.stringify(user));
+      else window.localStorage.removeItem("meridian.user");
+    } catch { /* ignore quota errors */ }
+  }, [user]);
 
   function openPositionOrResume() {
     if (!user?.hasResume) setOverlay({ kind: "resume" });
