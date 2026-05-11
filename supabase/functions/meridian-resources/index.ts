@@ -17,6 +17,7 @@ Deno.serve(async (req) => {
     const niche = profile?.niche || "";
     const employers = (profile?.employers || []).join(", ");
     const name = profile?.name || "the candidate";
+    const resumeText = String(profile?.resumeText || "").slice(0, 5000);
     const today = new Date().toISOString().slice(0, 10);
 
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -29,6 +30,7 @@ Deno.serve(async (req) => {
 
 URL POLICY: NEVER return google.com URLs (they refuse to be embedded/visited from in-app browsers). Use DIRECT URLs to real sites like canva.com/resumes/templates, novoresume.com/resume-templates, resume.io/resume-templates, zety.com, themuse.com, hbr.org, wsj.com, bloomberg.com, reuters.com, ft.com, law360.com, bain.com/insights, mckinsey.com/featured-insights. If you're not sure of a specific URL, use a Bing search URL ("https://www.bing.com/search?q=...") — NEVER google.com.` },
           { role: "user", content: `Curate resources for ${name} who is a ${stage} in ${industry}${niche ? ` (niche: ${niche})` : ""} targeting "${target}"${employers ? `, watching ${employers}` : ""}.
+${resumeText ? `\nResume evidence to use when organizing the brief and resources:\n"""\n${resumeText}\n"""` : "\nNo resume text is available yet, so make the brief clear that upload/refinement will sharpen the route."}
 
 Generate:
 1) 3 RESUME TEMPLATES — name, one-line desc, optional tag, real templateUrl (DIRECT site URL — NEVER google.com).
