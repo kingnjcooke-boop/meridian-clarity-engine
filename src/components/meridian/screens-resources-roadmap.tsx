@@ -310,7 +310,7 @@ function roadmapActions(scoreData?: ScoreData | null): RoadmapAction[] {
     title: a.title,
     signal: a.signal,
     gap: a.gap,
-    pts: Math.max(4, Math.min(15, Math.round(Number(a.pts) || 8))),
+    pts: scalePts(Math.max(4, Math.min(15, Math.round(Number(a.pts) || 8))), scoreData?.score),
     impact: i === 0 ? "High" : i < 3 ? "Medium" : "Focused",
     time: a.time,
     color: i % 3 === 1 ? "#C68B4E" : i % 3 === 2 ? "#185FA5" : "#3B6D11",
