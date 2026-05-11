@@ -43,9 +43,8 @@ export function AlertsScreen({ onOpenStory }: { onOpenStory: (id: number) => voi
             <div className="relative h-[140px]">
               <img src={s.img} alt="" className="w-full h-full object-cover" loading="lazy" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-              <div className="absolute top-3 left-3 bg-black/40 backdrop-blur-md border border-white/10 rounded-full px-2 py-0.5 flex items-center gap-1">
-                <I.CheckCircle width={9} height={9} className="text-emerald-300" />
-                <span className="text-[9px] text-white/80 tracking-wider">{s.confirmedBy.length} sources</span>
+              <div className="absolute top-3 left-3 bg-black/40 backdrop-blur-md border border-white/10 rounded-full px-2 py-0.5">
+                <span className="text-[9px] text-white/80 tracking-wider uppercase">{s.source}</span>
               </div>
               <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-md border border-white/10 rounded-2xl px-2.5 py-1 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full" style={{ background: s.badge.dot }} />
