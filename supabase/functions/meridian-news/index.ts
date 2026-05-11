@@ -1,19 +1,42 @@
-// AI-generated industry intelligence stories — strictly current (<3 weeks old)
+// AI-generated industry intelligence stories — strictly current (<3 weeks old).
+// Each card uses a REAL photographic image: the article's og:image when a
+// real URL is known, else a contextual editorial photo keyed to the story.
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const esc = (v: unknown) => String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]!));
-const brandImage = (s: any, i: number) => {
-  const palettes = [["#04342C", "#C99B55"], ["#0D1B2A", "#5DCAA5"], ["#111827", "#EF9F27"], ["#172554", "#93C5FD"], ["#1F2937", "#D1D5DB"], ["#052E2B", "#F6D58B"]];
-  const [bg, accent] = palettes[i % palettes.length];
-  const source = esc(s.source || "Meridian").slice(0, 30);
-  const tag = esc(s.tag || "INTEL").slice(0, 22);
-  const focus = esc((Array.isArray(s.thumbnailKeywords) ? s.thumbnailKeywords.join(" · ") : s.visualFocus) || s.headline || "market signal").slice(0, 70);
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520"><rect width="800" height="520" fill="${bg}"/><circle cx="642" cy="118" r="190" fill="none" stroke="${accent}" stroke-opacity=".28" stroke-width="1.4"/><circle cx="642" cy="118" r="120" fill="none" stroke="${accent}" stroke-opacity=".18" stroke-width="1"/><path d="M70 365 C190 285 276 430 410 336 S626 245 735 300" fill="none" stroke="${accent}" stroke-opacity=".5" stroke-width="2"/><text x="58" y="82" fill="${accent}" font-family="Arial, sans-serif" font-size="24" letter-spacing="7">${tag}</text><text x="58" y="140" fill="#fff" font-family="Georgia, serif" font-size="54" font-style="italic">${source}</text><text x="58" y="440" fill="#fff" fill-opacity=".72" font-family="Arial, sans-serif" font-size="26">${focus}</text><rect x="58" y="174" width="96" height="3" fill="${accent}" opacity=".75"/></svg>`;
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
-};
+async function ogImage(url: string): Promise<string | null> {
+  try {
+    const r = await fetch(url, {
+      redirect: "follow",
+      headers: { "user-agent": "Mozilla/5.0 (compatible; MeridianBot/1.0)" },
+      signal: AbortSignal.timeout(4500),
+    });
+    if (!r.ok) return null;
+    const html = await r.text();
+    const m =
+      html.match(/<meta[^>]+property=["']og:image(?::secure_url)?["'][^>]+content=["']([^"']+)["']/i) ||
+      html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i) ||
+      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+    if (!m) return null;
+    let img = m[1].trim();
+    if (img.startsWith("//")) img = "https:" + img;
+    if (img.startsWith("/")) {
+      const u = new URL(url);
+      img = `${u.protocol}//${u.host}${img}`;
+    }
+    return /^https?:\/\//i.test(img) ? img : null;
+  } catch {
+    return null;
+  }
+}
+
+function photoFallback(keywords: string[], seed: number): string {
+  const tag = encodeURIComponent((keywords && keywords.length ? keywords : ["newsroom", "office"]).slice(0, 3).join(","));
+  // LoremFlickr serves real Flickr photographs keyed to tags
+  return `https://loremflickr.com/800/520/${tag}?lock=${seed}`;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -38,8 +61,17 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: `You are an industry intelligence analyst. Today's date is ${todayStr}. EVERY story you generate must be plausibly published between ${cutoff} and ${todayStr} — i.e. within the last 3 weeks. Never reference older events. Output ONLY tool calls.` },
-          { role: "user", content: `Generate ${count} CURRENT (last 3 weeks only — between ${cutoff} and ${todayStr}) industry-news stories that someone targeting "${target}"${niche ? ` (niche: ${niche})` : ""} (${industry}, ${stage})${employers ? `, watching ${employers}` : ""} should track this week. Each story must be plausible, specific to real firms/agencies/regulations, and tied to events that could realistically have happened in the past 21 days. For each provide: headline; tag (REGULATION/HIRING/M&A/POLICY/LITIGATION/MARKET/FUNDING/TECH); 3-4 sentence AI summary referencing recent developments; 2-sentence "impact on positioning"; urgency badge text + dot color (#ef4444 high, #f59e0b medium, #10b981 watch); thumbnailKeywords = 2-3 SPECIFIC visual nouns/brands directly depicting the story; imageUrl ONLY if you know a direct publisher/company/agency image URL that belongs to that story/source. Do NOT invent stock-photo URLs. If no direct story/brand image is known, leave imageUrl empty so the app renders a branded intelligence card instead. age in human format like "2h", "1d", "5d", "2w" — must reflect a date in the last 21 days.` }
+          { role: "system", content: `You are an industry intelligence analyst. Today is ${todayStr}. Every story you produce must reflect a REAL event published between ${cutoff} and ${todayStr}. Prefer events you can cite to a real publisher URL.
+
+COPY RULES (strictly enforced):
+- Headlines: max 9 words. No filler. Lead with the strongest word.
+- Summary: max 2 sentences, no throat-clearing.
+- Impact: 1 sentence, lead with the verb or noun that matters.
+- Tag: 1-2 words ALL CAPS.
+- badgeText: 1-3 words.
+
+Output ONLY tool calls.` },
+          { role: "user", content: `Generate ${count} CURRENT (last 3 weeks: ${cutoff} → ${todayStr}) news stories that someone targeting "${target}"${niche ? ` (${niche})` : ""} (${industry}, ${stage})${employers ? `, watching ${employers}` : ""} should track. For each: cite the real source publisher (Bloomberg Law, Reuters, Politico, FT, WSJ, Law360, Axios, etc.), and if you know a real article URL, return it in articleUrl. Provide thumbnailKeywords = 2-3 concrete photographic subjects (real people titles, locations, objects, brand names) that would appear in a news photo of this story — NOT abstractions like "growth" or "innovation". Urgency dot: #ef4444 high, #f59e0b medium, #10b981 watch.` }
         ],
         tools: [{
           type: "function",
@@ -56,14 +88,14 @@ Deno.serve(async (req) => {
                       headline: { type: "string" },
                       tag: { type: "string" },
                       source: { type: "string" },
-                      age: { type: "string", description: "Must be within 21 days. E.g. '4h', '2d', '1w', '2w'." },
-                      publishedAt: { type: "string", description: `ISO date between ${cutoff} and ${todayStr}` },
+                      age: { type: "string" },
+                      publishedAt: { type: "string" },
                       summary: { type: "string" },
                       impact: { type: "string" },
                       badgeText: { type: "string" },
                       badgeDot: { type: "string" },
-                      thumbnailKeywords: { type: "array", items: { type: "string" }, description: "2-3 concrete visual subjects directly depicting the story" },
-                      imageUrl: { type: "string", description: "Direct article/publisher/company image URL when known; otherwise empty string" },
+                      thumbnailKeywords: { type: "array", items: { type: "string" } },
+                      articleUrl: { type: "string", description: "Real publisher URL if known" },
                       sources: { type: "array", items: { type: "string" } },
                     },
                     required: ["headline", "tag", "source", "age", "publishedAt", "summary", "impact", "badgeText", "badgeDot", "thumbnailKeywords", "sources"],
@@ -92,10 +124,18 @@ Deno.serve(async (req) => {
       const t = Date.parse(s.publishedAt || "");
       return !isNaN(t) ? t >= cutoffMs : true;
     });
-    const stories = fresh.map((s: any, i: number) => {
-      const knownImage = typeof s.imageUrl === "string" && /^https:\/\//i.test(s.imageUrl) ? s.imageUrl : "";
-      return { ...s, id: i, img: knownImage || brandImage(s, i) };
-    });
+
+    // Resolve images in parallel — try og:image of articleUrl first; fall back to a real photographic stock.
+    const stories = await Promise.all(
+      fresh.map(async (s: any, i: number) => {
+        let img: string | null = null;
+        if (typeof s.articleUrl === "string" && /^https?:\/\//i.test(s.articleUrl)) {
+          img = await ogImage(s.articleUrl);
+        }
+        if (!img) img = photoFallback(s.thumbnailKeywords || [], i + Date.parse(s.publishedAt || "") || i);
+        return { ...s, id: i, img };
+      })
+    );
 
     return new Response(JSON.stringify({ stories }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
