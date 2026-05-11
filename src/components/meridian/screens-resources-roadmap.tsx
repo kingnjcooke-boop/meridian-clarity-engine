@@ -302,11 +302,10 @@ export function DrillDetail({ idx, onBack }: { idx: number; onBack: () => void }
 
 // ─── ROADMAP ───
 export function RoadmapScreen({ onOpenAction, onBack }: { onOpenAction: (id: number) => void; onBack: () => void }) {
-  const completed = [
-    { title: "Updated headline to lead with regulatory focus", pts: 6, when: "2 days ago" },
-    { title: "Reached out to 3 alumni at GD D.C.", pts: 8, when: "4 days ago" },
-    { title: "Drafted note on FCC merger review", pts: 5, when: "1 week ago" },
-  ];
+  const { scoreData, scoreLoading } = useMeridianData();
+  const actions = roadmapActions(scoreData);
+  const projected = actions.slice(0, 3).reduce((sum, a) => sum + Number(a.pts || 0), 0);
+  const completed = (scoreData?.strengths?.length ? scoreData.strengths : ["Uploaded resume for baseline calibration"]).slice(0, 3).map((title, i) => ({ title, pts: 4 + i * 2, when: i === 0 ? "baseline" : "profile signal" }));
 
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar fade-in pb-6">
@@ -322,20 +321,20 @@ export function RoadmapScreen({ onOpenAction, onBack }: { onOpenAction: (id: num
         <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-[var(--olo)]/10 blur-2xl" />
         <div className="text-[10px] tracking-[0.2em] uppercase text-white/40">This Week</div>
         <div className="flex items-baseline gap-2 mt-1">
-          <div className="font-serif text-[42px] font-light leading-none">+18</div>
+          <div className="font-serif text-[42px] font-light leading-none">+{projected || (scoreLoading ? "…" : 0)}</div>
           <div className="text-[12px] text-white/50 font-light">projected score gain</div>
         </div>
         <div className="mt-3 flex items-center gap-3">
           <div className="flex-1 h-1.5 bg-white/10 rounded">
-            <div className="h-full bg-[var(--olo)] rounded" style={{ width: "37%" }} />
+            <div className="h-full bg-[var(--olo)] rounded" style={{ width: `${Math.min(82, Math.max(18, projected * 2))}%` }} />
           </div>
-          <div className="text-[11px] text-white/70 tabular-nums">3 / 8</div>
+          <div className="text-[11px] text-white/70 tabular-nums">{actions.length} live</div>
         </div>
       </div>
 
       <SecRow label="Up Next" />
       <div className="px-5 space-y-2">
-        {ACTIONS.map((a, i) => (
+        {actions.map((a, i) => (
           <button key={a.id} onClick={() => onOpenAction(a.id)} className="w-full bg-surface rounded-2xl px-4 py-3.5 shadow-[0_1px_5px_rgba(0,0,0,0.05)] border-l-2 text-left flex gap-3 items-start active:scale-[0.99] transition" style={{ borderLeftColor: a.color }}>
             <div className="w-7 h-7 rounded-full bg-[var(--navy)] text-white flex items-center justify-center text-[12px] font-light flex-shrink-0 mt-0.5">{i + 1}</div>
             <div className="flex-1 min-w-0">
@@ -375,7 +374,8 @@ export function RoadmapScreen({ onOpenAction, onBack }: { onOpenAction: (id: num
 }
 
 export function ActionDetail({ id, onBack }: { id: number; onBack: () => void }) {
-  const a = ACTIONS[id];
+  const { scoreData } = useMeridianData();
+  const a = roadmapActions(scoreData)[id] || ACTIONS[id] || ACTIONS[0];
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar fade-in pb-6">
       <div className="flex items-center justify-between px-5 pt-3 pb-1">
