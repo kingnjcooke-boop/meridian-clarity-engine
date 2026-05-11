@@ -220,21 +220,21 @@ export function SecRow({ label, link, onLink }: { label: string; link?: string; 
   );
 }
 
-function CandidateSnapshot({ ready, summary, strength, gap, locked, onOpen }: { ready: boolean; summary?: string; strength?: string; gap?: string; locked?: boolean; onOpen: () => void }) {
-  const left = ready ? (strength || "Strongest current signal identified") : locked ? "Resume needed" : "Score calibrating";
-  const right = ready ? (gap || "Next gap is being ranked") : locked ? "Tap the compass to upload" : "AI is benchmarking your profile";
+function CandidateSnapshot({ ready, strength, gap, locked, onOpen }: { ready: boolean; strength?: string; gap?: string; locked?: boolean; onOpen: () => void }) {
+  const trim = (s?: string, n = 38) => (s ? (s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s) : "");
+  const left = ready ? trim(strength) || "Signal locked" : locked ? "Resume needed" : "Calibrating";
+  const right = ready ? trim(gap) || "Ranking gaps" : locked ? "Tap to upload" : "Benchmarking";
   return (
-    <div className="px-6 mt-7">
-      {summary && <p className="text-center text-[11.5px] text-ink2 font-light leading-relaxed max-w-[330px] mx-auto mb-3">{summary}</p>}
-      <button onClick={onOpen} className="grid grid-cols-2 gap-2 w-full text-left group" aria-label="Open candidate position summary">
-        <div className="rounded-xl bg-surface/75 border border-black/[0.05] dark:border-white/[0.08] px-3 py-3 min-h-[78px] shadow-[0_1px_5px_rgba(0,0,0,0.04)]">
-          <div className="text-[9px] tracking-[0.16em] uppercase text-[var(--olo)] mb-1">Signal</div>
-          <div className="text-[12px] leading-snug text-ink font-light line-clamp-3">{left}</div>
+    <div className="px-6 mt-8">
+      <button onClick={onOpen} className="grid grid-cols-2 gap-2 w-full text-left group" aria-label="Open positioning">
+        <div className="rounded-xl bg-surface/70 border border-black/[0.05] dark:border-white/[0.08] px-3 py-2.5 shadow-[0_1px_5px_rgba(0,0,0,0.04)]">
+          <div className="text-[8.5px] tracking-[0.2em] uppercase text-[var(--olo)] mb-1">Strength</div>
+          <div className="text-[12px] leading-snug text-ink font-light line-clamp-2">{left}</div>
         </div>
-        <div className="rounded-xl bg-surface/75 border border-[var(--olo)]/18 px-3 py-3 min-h-[78px] shadow-[0_1px_5px_rgba(0,0,0,0.04)] relative overflow-hidden">
-          <div className="absolute right-2 top-2 text-[var(--olo)] opacity-70 group-active:translate-x-0.5 transition"><I.ArrowRight width={12} height={12} /></div>
-          <div className="text-[9px] tracking-[0.16em] uppercase text-ink3 mb-1">Next</div>
-          <div className="text-[12px] leading-snug text-ink font-light line-clamp-3 pr-2">{right}</div>
+        <div className="rounded-xl bg-surface/70 border border-[var(--olo)]/20 px-3 py-2.5 shadow-[0_1px_5px_rgba(0,0,0,0.04)] relative">
+          <div className="absolute right-2 top-2 text-[var(--olo)] opacity-70 group-active:translate-x-0.5 transition"><I.ArrowRight width={11} height={11} /></div>
+          <div className="text-[8.5px] tracking-[0.2em] uppercase text-ink3 mb-1">Gap</div>
+          <div className="text-[12px] leading-snug text-ink font-light line-clamp-2 pr-3">{right}</div>
         </div>
       </button>
     </div>
