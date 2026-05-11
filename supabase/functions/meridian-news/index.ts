@@ -32,10 +32,28 @@ async function ogImage(url: string): Promise<string | null> {
   }
 }
 
-function photoFallback(keywords: string[], seed: number): string {
-  const tag = encodeURIComponent((keywords && keywords.length ? keywords : ["newsroom", "office"]).slice(0, 3).join(","));
-  // LoremFlickr serves real Flickr photographs keyed to tags
-  return `https://loremflickr.com/800/520/${tag}?lock=${seed}`;
+async function wikiThumb(keyword: string): Promise<string | null> {
+  try {
+    const title = encodeURIComponent(keyword.trim().replace(/\s+/g, "_"));
+    const r = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${title}`, {
+      headers: { "User-Agent": "MeridianBot/1.0", Accept: "application/json" },
+    });
+    if (!r.ok) return null;
+    const j = await r.json();
+    const url = j?.originalimage?.source || j?.thumbnail?.source;
+    return typeof url === "string" && /^https?:\/\//.test(url) ? url : null;
+  } catch {
+    return null;
+  }
+}
+
+function brandedSvg(source: string, headline: string, seed: number): string {
+  const palette = ["#0c2340", "#3b6d11", "#0c447c", "#5c2018", "#143d2f"];
+  const bg = palette[Math.abs(seed) % palette.length];
+  const src = (source || "Meridian").slice(0, 32).replace(/[<>&]/g, "");
+  const line = (headline || "").slice(0, 56).replace(/[<>&]/g, "");
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520"><rect width="800" height="520" fill="${bg}"/><text x="48" y="120" fill="rgba(255,255,255,0.55)" font-family="Georgia, serif" font-size="20" letter-spacing="3">${src.toUpperCase()}</text><text x="48" y="280" fill="#fff" font-family="Georgia, serif" font-size="44" font-style="italic">${line}</text></svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
 Deno.serve(async (req) => {
