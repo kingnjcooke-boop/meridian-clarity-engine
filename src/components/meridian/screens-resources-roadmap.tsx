@@ -1,6 +1,6 @@
 import { I } from "./icons";
 import { ACTIONS, SecRow } from "./screens-core";
-import { useMeridianData } from "./MeridianDataContext";
+import { useMeridianData, scalePts } from "./MeridianDataContext";
 import type { ScoreData } from "./MeridianDataContext";
 
 const themeMap: Record<string, string> = {
