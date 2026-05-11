@@ -176,7 +176,7 @@ Output ONLY tool calls.` },
       return !isNaN(t) ? t >= cutoffMs : true;
     });
 
-    // Resolve images: og:image of articleUrl → Wikipedia thumb of each keyword → branded SVG.
+    // Resolve images: og:image → Wikipedia (named entity, quality-gated) → Unsplash featured → branded SVG.
     const stories = await Promise.all(
       fresh.map(async (s: any, i: number) => {
         let img: string | null = null;
@@ -188,6 +188,13 @@ Output ONLY tool calls.` },
             img = await wikiThumb(kw);
             if (img) break;
           }
+        }
+        if (!img && typeof s.imageQuery === "string" && s.imageQuery.trim()) {
+          img = await unsplashFeatured(s.imageQuery);
+        }
+        if (!img) {
+          // last-resort photo: try the tag as an Unsplash query
+          img = await unsplashFeatured((s.tag || s.source || "skyline").toLowerCase());
         }
         if (!img) img = brandedSvg(s.source || "Meridian", s.headline || "", i + (Date.parse(s.publishedAt || "") || i));
         return { ...s, id: i, img };
