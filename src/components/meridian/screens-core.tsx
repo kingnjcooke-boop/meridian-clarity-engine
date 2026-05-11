@@ -39,7 +39,7 @@ export function BriefScreen({ user, dark, setDark, onOpenStory, onOpenRoadmap, o
 
   const hasScore = user.hasResume && scoreData;
   const scoreStr = hasScore ? String(scoreData!.score) : (scoreLoading ? "…" : "—");
-  const scoreSub = hasScore ? scoreData!.percentile : (scoreLoading ? "Scoring" : user.hasResume ? "Calibrating" : "Locked");
+  const scoreSub = hasScore ? tierFromScore(scoreData!.score) : (scoreLoading ? "Scoring" : user.hasResume ? "Calibrating" : "Locked");
   const trendStr = hasScore ? (scoreData!.trend >= 0 ? `+${scoreData!.trend}` : `${scoreData!.trend}`) : "—";
   const trendSub = hasScore ? scoreData!.trendLabel : "7-Day";
   const gapsStr = hasScore ? String(scoreData!.gapsCount) : "—";
