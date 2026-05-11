@@ -1,7 +1,7 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { I, MeridianMark } from "./icons";
 import type { OnboardingData } from "./Onboarding";
-import { useMeridianData } from "./MeridianDataContext";
+import { useMeridianData, tierFromScore } from "./MeridianDataContext";
 import { MeridianCompass } from "./MeridianCompass";
 
 type StoryId = number;
