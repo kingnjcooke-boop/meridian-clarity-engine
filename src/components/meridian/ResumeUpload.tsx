@@ -15,21 +15,45 @@ export function ResumeUpload({ initial, onCancel, onSave }: Props) {
   const [err, setErr] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  async function extractPdfText(file: File) {
+    const pdfjs = await import("pdfjs-dist");
+    const worker = await import("pdfjs-dist/build/pdf.worker.mjs?url");
+    pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
+    const pdf = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+    const pages: string[] = [];
+    for (let pageNo = 1; pageNo <= pdf.numPages; pageNo += 1) {
+      const page = await pdf.getPage(pageNo);
+      const content = await page.getTextContent();
+      pages.push(content.items.map((item: any) => item.str || "").join(" "));
+    }
+    return pages.join("\n");
+  }
+
+  async function extractDocxText(file: File) {
+    const mammoth = await import("mammoth/mammoth.browser");
+    const result = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+    return result.value || "";
+  }
+
   async function handleFile(f: File) {
     setErr(null);
     setBusy(true);
     try {
       let extracted = "";
-      if (f.type.startsWith("text/") || f.name.endsWith(".txt") || f.name.endsWith(".md")) {
+      const lower = f.name.toLowerCase();
+      if (f.type.startsWith("text/") || lower.endsWith(".txt") || lower.endsWith(".md")) {
         extracted = await f.text();
-      } else if (f.type === "application/pdf" || f.name.endsWith(".pdf")) {
-        // Best-effort: read as text — many ATS-exported PDFs surface enough text this way
-        try { extracted = await f.text(); } catch { extracted = ""; }
-        // strip non-printable
-        extracted = extracted.replace(/[^\x09\x0A\x0D\x20-\x7E]/g, " ").replace(/\s+/g, " ").trim();
+      } else if (f.type === "application/pdf" || lower.endsWith(".pdf")) {
+        extracted = await extractPdfText(f);
+      } else if (lower.endsWith(".docx")) {
+        extracted = await extractDocxText(f);
+      } else if (lower.endsWith(".doc")) {
+        throw new Error("Old .doc files do not expose reliable text here. Please export as PDF/DOCX or paste the text below.");
       } else {
         try { extracted = await f.text(); } catch { extracted = ""; }
       }
+      extracted = extracted.replace(/\s+/g, " ").trim();
+      if (extracted.length < 80) throw new Error("We could not extract enough resume text. If this is a scanned PDF, paste the resume text below.");
       setName(f.name);
       setText(extracted.slice(0, 12000));
     } catch (e: any) {
