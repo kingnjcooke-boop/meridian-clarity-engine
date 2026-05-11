@@ -1,6 +1,7 @@
 import { I } from "./icons";
 import { ACTIONS, SecRow } from "./screens-core";
 import { useMeridianData } from "./MeridianDataContext";
+import type { ScoreData } from "./MeridianDataContext";
 
 const themeMap: Record<string, string> = {
   navy: "from-[var(--navy)] to-[var(--navy)]/80",
@@ -9,7 +10,7 @@ const themeMap: Record<string, string> = {
   blue: "from-[#185FA5] to-[#2978c8]",
 };
 
-export function ResourcesScreen({ onOpenIndustryBrief, onOpenDrill }: { onOpenIndustryBrief: () => void; onOpenDrill: (idx: number) => void }) {
+export function ResourcesScreen({ onOpenIndustryBrief, onOpenDrill, onOpenLexicon }: { onOpenIndustryBrief: () => void; onOpenDrill: (idx: number) => void; onOpenLexicon: () => void }) {
   const { resources, resourcesLoading, resourcesError, refreshResources } = useMeridianData();
   const brief = resources?.industryBrief;
 
@@ -91,27 +92,23 @@ export function ResourcesScreen({ onOpenIndustryBrief, onOpenDrill }: { onOpenIn
 
       {resources?.lexicon && resources.lexicon.length > 0 && (
         <>
-          <SecRow label="Insider Lexicon" />
+          <SecRow label="Insider Lexicon" link="Open" onLink={onOpenLexicon} />
           <div className="px-5">
-            <div className="bg-surface rounded-2xl shadow-[0_1px_5px_rgba(0,0,0,0.05)] overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-black/[0.05] dark:border-white/10 flex items-center gap-2">
+            <button onClick={onOpenLexicon} className="w-full bg-surface rounded-2xl shadow-[0_1px_5px_rgba(0,0,0,0.05)] overflow-hidden text-left active:scale-[0.99] transition">
+              <div className="px-4 py-3 border-b border-black/[0.05] dark:border-white/10 flex items-center gap-2">
                 <I.Sparkles width={11} height={11} className="text-[var(--olo)]" />
                 <div className="text-[10px] tracking-[0.18em] uppercase text-ink3">What insiders know · {resources.lexicon.length} terms</div>
+                <I.ArrowRight width={12} height={12} className="ml-auto text-[var(--olo)]" />
               </div>
-              <div className="divide-y divide-black/[0.04] dark:divide-white/[0.06]">
-                {resources.lexicon.map((l, i) => (
-                  <details key={i} className="px-4 py-2 group">
-                    <summary className="cursor-pointer list-none flex items-baseline gap-2">
-                      <span className="font-serif italic text-[13.5px] text-ink leading-snug flex-shrink-0">{l.term}</span>
-                      <span className="text-[11px] text-ink3 font-light truncate flex-1">— {l.definition}</span>
-                    </summary>
-                    <div className="mt-1.5 ml-1 pl-2.5 text-[11.5px] text-ink2 font-light leading-relaxed border-l-2 border-[var(--olo)]/40">
-                      <span className="text-[var(--olo)] tracking-wider text-[9px] uppercase mr-1.5">Why it matters</span>{l.whyItMatters}
-                    </div>
-                  </details>
+              <div className="px-4 py-3 grid grid-cols-2 gap-2">
+                {resources.lexicon.slice(0, 4).map((l, i) => (
+                  <div key={i} className="rounded-xl bg-black/[0.025] dark:bg-white/[0.04] px-3 py-2 min-h-[58px]">
+                    <div className="font-serif italic text-[13px] text-ink leading-snug line-clamp-2">{l.term}</div>
+                    <div className="text-[10px] text-ink3 mt-1">Tap to unpack</div>
+                  </div>
                 ))}
               </div>
-            </div>
+            </button>
           </div>
         </>
       )}
@@ -138,6 +135,42 @@ export function ResourcesScreen({ onOpenIndustryBrief, onOpenDrill }: { onOpenIn
               )}
             </div>
           </details>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function LexiconDetail({ onBack }: { onBack: () => void }) {
+  const { resources } = useMeridianData();
+  const terms = resources?.lexicon || [];
+  return (
+    <div className="flex-1 overflow-y-auto no-scrollbar fade-in pb-6">
+      <div className="flex items-center gap-3 px-5 pt-3 pb-2">
+        <button onClick={onBack} className="w-9 h-9 rounded-md bg-black/[0.04] dark:bg-white/[0.06] flex items-center justify-center text-ink2"><I.ChevronLeft width={16} height={16} /></button>
+        <div>
+          <div className="text-[10px] tracking-[0.18em] uppercase text-ink3 font-light">Resources</div>
+          <div className="font-serif text-[22px] text-ink leading-tight font-light">Insider Lexicon</div>
+        </div>
+      </div>
+      <div className="mx-5 mt-2 mb-3 rounded-2xl bg-[var(--olo)]/10 border border-[var(--olo)]/20 px-4 py-3">
+        <div className="text-[10px] tracking-[0.18em] uppercase text-[var(--olo)] mb-1">Field nuance</div>
+        <p className="text-[12.5px] text-ink2 leading-relaxed font-light">The shorthand, hidden rules, and interview cues that insiders expect you to understand.</p>
+      </div>
+      <div className="px-5 space-y-2.5">
+        {terms.map((l, i) => (
+          <div key={i} className="bg-surface rounded-2xl px-4 py-4 shadow-[0_1px_5px_rgba(0,0,0,0.05)] border border-black/[0.04] dark:border-white/[0.06]">
+            <div className="flex items-start gap-3">
+              <div className="w-7 h-7 rounded-full bg-[var(--olo)]/12 text-[var(--olo)] flex items-center justify-center text-[11px] flex-shrink-0">{i + 1}</div>
+              <div className="min-w-0 flex-1">
+                <div className="font-serif italic text-[17px] text-ink leading-snug">{l.term}</div>
+                <p className="text-[12.5px] text-ink2 leading-relaxed font-light mt-1">{l.definition}</p>
+                <div className="mt-2.5 border-l-2 border-[var(--olo)]/45 pl-3 text-[12px] text-ink3 leading-relaxed font-light">
+                  <span className="text-[var(--olo)] text-[9px] uppercase tracking-[0.14em] mr-1.5">Why it matters</span>{l.whyItMatters}
+                </div>
+              </div>
+            </div>
+          </div>
         ))}
       </div>
     </div>
@@ -268,13 +301,32 @@ export function DrillDetail({ idx, onBack }: { idx: number; onBack: () => void }
   );
 }
 
+type RoadmapAction = typeof ACTIONS[number];
+
+function roadmapActions(scoreData?: ScoreData | null): RoadmapAction[] {
+  if (!scoreData?.roadmap?.length) return ACTIONS;
+  return scoreData.roadmap.map((a, i) => ({
+    id: i,
+    title: a.title,
+    signal: a.signal,
+    gap: a.gap,
+    pts: Math.max(4, Math.min(15, Math.round(Number(a.pts) || 8))),
+    impact: i === 0 ? "High" : i < 3 ? "Medium" : "Focused",
+    time: a.time,
+    color: i % 3 === 1 ? "#C68B4E" : i % 3 === 2 ? "#185FA5" : "#3B6D11",
+    chip: "bg-[var(--olo)]/10 text-[var(--olo)]",
+    why: a.why,
+    steps: a.steps?.length ? a.steps : [a.title, "Turn it into a resume-visible signal", "Use it in targeted outreach"],
+    tip: a.tip,
+  }));
+}
+
 // ─── ROADMAP ───
 export function RoadmapScreen({ onOpenAction, onBack }: { onOpenAction: (id: number) => void; onBack: () => void }) {
-  const completed = [
-    { title: "Updated headline to lead with regulatory focus", pts: 6, when: "2 days ago" },
-    { title: "Reached out to 3 alumni at GD D.C.", pts: 8, when: "4 days ago" },
-    { title: "Drafted note on FCC merger review", pts: 5, when: "1 week ago" },
-  ];
+  const { scoreData, scoreLoading } = useMeridianData();
+  const actions = roadmapActions(scoreData);
+  const projected = actions.slice(0, 3).reduce((sum, a) => sum + Number(a.pts || 0), 0);
+  const completed = (scoreData?.strengths?.length ? scoreData.strengths : ["Uploaded resume for baseline calibration"]).slice(0, 3).map((title, i) => ({ title, pts: 4 + i * 2, when: i === 0 ? "baseline" : "profile signal" }));
 
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar fade-in pb-6">
@@ -290,20 +342,20 @@ export function RoadmapScreen({ onOpenAction, onBack }: { onOpenAction: (id: num
         <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-[var(--olo)]/10 blur-2xl" />
         <div className="text-[10px] tracking-[0.2em] uppercase text-white/40">This Week</div>
         <div className="flex items-baseline gap-2 mt-1">
-          <div className="font-serif text-[42px] font-light leading-none">+18</div>
+          <div className="font-serif text-[42px] font-light leading-none">+{projected || (scoreLoading ? "…" : 0)}</div>
           <div className="text-[12px] text-white/50 font-light">projected score gain</div>
         </div>
         <div className="mt-3 flex items-center gap-3">
           <div className="flex-1 h-1.5 bg-white/10 rounded">
-            <div className="h-full bg-[var(--olo)] rounded" style={{ width: "37%" }} />
+            <div className="h-full bg-[var(--olo)] rounded" style={{ width: `${Math.min(82, Math.max(18, projected * 2))}%` }} />
           </div>
-          <div className="text-[11px] text-white/70 tabular-nums">3 / 8</div>
+          <div className="text-[11px] text-white/70 tabular-nums">{actions.length} live</div>
         </div>
       </div>
 
       <SecRow label="Up Next" />
       <div className="px-5 space-y-2">
-        {ACTIONS.map((a, i) => (
+        {actions.map((a, i) => (
           <button key={a.id} onClick={() => onOpenAction(a.id)} className="w-full bg-surface rounded-2xl px-4 py-3.5 shadow-[0_1px_5px_rgba(0,0,0,0.05)] border-l-2 text-left flex gap-3 items-start active:scale-[0.99] transition" style={{ borderLeftColor: a.color }}>
             <div className="w-7 h-7 rounded-full bg-[var(--navy)] text-white flex items-center justify-center text-[12px] font-light flex-shrink-0 mt-0.5">{i + 1}</div>
             <div className="flex-1 min-w-0">
@@ -343,7 +395,8 @@ export function RoadmapScreen({ onOpenAction, onBack }: { onOpenAction: (id: num
 }
 
 export function ActionDetail({ id, onBack }: { id: number; onBack: () => void }) {
-  const a = ACTIONS[id];
+  const { scoreData } = useMeridianData();
+  const a = roadmapActions(scoreData)[id] || ACTIONS[id] || ACTIONS[0];
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar fade-in pb-6">
       <div className="flex items-center justify-between px-5 pt-3 pb-1">

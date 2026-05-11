@@ -77,7 +77,7 @@ export function BriefScreen({ user, dark, setDark, onOpenStory, onOpenRoadmap, o
       </div>
 
       {/* Floating compass — no container, just the widget */}
-      <div className="pt-2 pb-1">
+      <div className="pt-1 pb-5">
         <MeridianCompass
           onClick={onOpenPosition}
           locked={!user.hasResume}
@@ -88,9 +88,14 @@ export function BriefScreen({ user, dark, setDark, onOpenStory, onOpenRoadmap, o
           gaps={gapsStr}
           gapsSub={gapsSub}
         />
-        {hasScore && scoreData!.summary && (
-          <p className="px-7 text-center text-[11.5px] text-ink2 mt-1 font-light leading-relaxed max-w-[320px] mx-auto">{scoreData!.summary}</p>
-        )}
+        <CandidateSnapshot
+          ready={Boolean(hasScore)}
+          summary={scoreData?.summary}
+          strength={scoreData?.strengths?.[0]}
+          gap={scoreData?.gaps?.[0]?.title}
+          locked={!user.hasResume}
+          onOpen={onOpenPosition}
+        />
       </div>
 
       {/* Stories */}
@@ -212,6 +217,27 @@ export function SecRow({ label, link, onLink }: { label: string; link?: string; 
     <div className="flex justify-between items-center px-5 pt-4 pb-2">
       <span className="text-[10px] tracking-[0.18em] uppercase text-ink3 font-normal">{label}</span>
       {link && <button onClick={onLink} className="text-[11px] text-[var(--olo)] tracking-wider hover:underline">{link}</button>}
+    </div>
+  );
+}
+
+function CandidateSnapshot({ ready, summary, strength, gap, locked, onOpen }: { ready: boolean; summary?: string; strength?: string; gap?: string; locked?: boolean; onOpen: () => void }) {
+  const left = ready ? (strength || "Strongest current signal identified") : locked ? "Resume needed" : "Score calibrating";
+  const right = ready ? (gap || "Next gap is being ranked") : locked ? "Tap the compass to upload" : "AI is benchmarking your profile";
+  return (
+    <div className="px-6 mt-7">
+      {summary && <p className="text-center text-[11.5px] text-ink2 font-light leading-relaxed max-w-[330px] mx-auto mb-3">{summary}</p>}
+      <button onClick={onOpen} className="grid grid-cols-2 gap-2 w-full text-left group" aria-label="Open candidate position summary">
+        <div className="rounded-xl bg-surface/75 border border-black/[0.05] dark:border-white/[0.08] px-3 py-3 min-h-[78px] shadow-[0_1px_5px_rgba(0,0,0,0.04)]">
+          <div className="text-[9px] tracking-[0.16em] uppercase text-[var(--olo)] mb-1">Signal</div>
+          <div className="text-[12px] leading-snug text-ink font-light line-clamp-3">{left}</div>
+        </div>
+        <div className="rounded-xl bg-surface/75 border border-[var(--olo)]/18 px-3 py-3 min-h-[78px] shadow-[0_1px_5px_rgba(0,0,0,0.04)] relative overflow-hidden">
+          <div className="absolute right-2 top-2 text-[var(--olo)] opacity-70 group-active:translate-x-0.5 transition"><I.ArrowRight width={12} height={12} /></div>
+          <div className="text-[9px] tracking-[0.16em] uppercase text-ink3 mb-1">Next</div>
+          <div className="text-[12px] leading-snug text-ink font-light line-clamp-3 pr-2">{right}</div>
+        </div>
+      </button>
     </div>
   );
 }

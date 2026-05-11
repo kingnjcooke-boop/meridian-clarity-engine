@@ -4,6 +4,14 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const esc = (v: unknown) => String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]!));
+const briefImage = (b: any, target: string) => {
+  const title = esc(b?.title || "Industry Brief").slice(0, 42);
+  const focus = esc(target).slice(0, 64);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720"><rect width="1200" height="720" fill="#04342C"/><circle cx="930" cy="190" r="250" fill="none" stroke="#C99B55" stroke-opacity=".28" stroke-width="2"/><circle cx="930" cy="190" r="155" fill="none" stroke="#C99B55" stroke-opacity=".18" stroke-width="1.5"/><path d="M115 520 C250 360 390 560 535 420 S795 315 1035 405" fill="none" stroke="#C99B55" stroke-opacity=".55" stroke-width="3"/><path d="M160 165 L202 142 L220 188 L178 210 Z" fill="#C99B55" fill-opacity=".18"/><text x="110" y="120" fill="#C99B55" font-family="Arial, sans-serif" font-size="28" letter-spacing="10">MERIDIAN</text><text x="110" y="214" fill="#fff" font-family="Georgia, serif" font-size="78">${title}</text><text x="110" y="590" fill="#fff" fill-opacity=".68" font-family="Arial, sans-serif" font-size="34">${focus}</text></svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
@@ -17,6 +25,7 @@ Deno.serve(async (req) => {
     const niche = profile?.niche || "";
     const employers = (profile?.employers || []).join(", ");
     const name = profile?.name || "the candidate";
+    const resumeText = String(profile?.resumeText || "").slice(0, 5000);
     const today = new Date().toISOString().slice(0, 10);
 
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -29,6 +38,7 @@ Deno.serve(async (req) => {
 
 URL POLICY: NEVER return google.com URLs (they refuse to be embedded/visited from in-app browsers). Use DIRECT URLs to real sites like canva.com/resumes/templates, novoresume.com/resume-templates, resume.io/resume-templates, zety.com, themuse.com, hbr.org, wsj.com, bloomberg.com, reuters.com, ft.com, law360.com, bain.com/insights, mckinsey.com/featured-insights. If you're not sure of a specific URL, use a Bing search URL ("https://www.bing.com/search?q=...") — NEVER google.com.` },
           { role: "user", content: `Curate resources for ${name} who is a ${stage} in ${industry}${niche ? ` (niche: ${niche})` : ""} targeting "${target}"${employers ? `, watching ${employers}` : ""}.
+${resumeText ? `\nResume evidence to use when organizing the brief and resources:\n"""\n${resumeText}\n"""` : "\nNo resume text is available yet, so make the brief clear that upload/refinement will sharpen the route."}
 
 Generate:
 1) 3 RESUME TEMPLATES — name, one-line desc, optional tag, real templateUrl (DIRECT site URL — NEVER google.com).
@@ -90,8 +100,7 @@ Generate:
     payload.articles = (payload.articles || []).map((a: any) => ({ ...a, articleUrl: sanitize(a.articleUrl, `https://www.bing.com/search?q=${encodeURIComponent(a.title)}`) }));
 
     if (payload.industryBrief?.logoKeyword) {
-      const tags = String(payload.industryBrief.logoKeyword).toLowerCase().replace(/[^a-z0-9 ,]/g, "").split(/[, ]+/).filter(Boolean).slice(0, 3).join(",");
-      payload.industryBrief.image = `https://loremflickr.com/1200/720/${encodeURIComponent(tags || "skyline")}?lock=${Date.now() % 9999}`;
+      payload.industryBrief.image = briefImage(payload.industryBrief, target);
     }
     payload.drills = (payload.drills || []).map((d: any) => ({ ...d, count: (d.questions || []).length }));
     return new Response(JSON.stringify(payload), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

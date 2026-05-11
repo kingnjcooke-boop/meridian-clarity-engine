@@ -47,7 +47,8 @@ Return:
 - gapsPriority: short e.g. "High Priority"
 - summary: 2 sentences — what they have, what's missing
 - gaps: array of 3-5 specific gap objects { title, severity ("Critical"|"High"|"Medium"), why (1 sentence), nextAction (verb-led, 1 sentence) }
-- strengths: 2-3 short bullets of what genuinely helps them` }
+- strengths: 2-3 short bullets of what genuinely helps them
+- roadmap: 4-6 reactive next actions generated from THIS resume and target, each { title, gap, pts (4-15), time, signal, why, steps (3-5 concrete steps), tip }` }
         ],
         tools: [{
           type: "function",
@@ -65,8 +66,9 @@ Return:
                 summary: { type: "string" },
                 gaps: { type: "array", items: { type: "object", properties: { title: { type: "string" }, severity: { type: "string" }, why: { type: "string" }, nextAction: { type: "string" } }, required: ["title","severity","why","nextAction"] } },
                 strengths: { type: "array", items: { type: "string" } },
+                roadmap: { type: "array", items: { type: "object", properties: { title: { type: "string" }, gap: { type: "string" }, pts: { type: "number" }, time: { type: "string" }, signal: { type: "string" }, why: { type: "string" }, steps: { type: "array", items: { type: "string" } }, tip: { type: "string" } }, required: ["title","gap","pts","time","signal","why","steps","tip"] } },
               },
-              required: ["score","percentile","trend","trendLabel","gapsCount","gapsPriority","summary","gaps","strengths"],
+              required: ["score","percentile","trend","trendLabel","gapsCount","gapsPriority","summary","gaps","strengths","roadmap"],
             }
           }
         }],

@@ -23,12 +23,12 @@ export function MeridianCompass({
   locked,
 }: Props) {
   const stroke = "currentColor";
-  const size = 200;
+  const size = 180;
 
   return (
     <button
       onClick={onClick}
-      className="block mx-auto text-left relative group text-ink2"
+      className="block mx-auto text-left relative group text-ink2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--olo)]/50 rounded-full"
       style={{ width: size, height: size }}
       aria-label="Open positioning"
     >
@@ -63,6 +63,8 @@ export function MeridianCompass({
         <circle cx="100" cy="100" r="3.5" fill="var(--background)" stroke="var(--olo)" strokeWidth="1.2" />
       </svg>
 
+      <div className="absolute inset-[46px] rounded-full border border-[var(--olo)]/20 bg-[var(--olo)]/5 opacity-0 group-hover:opacity-100 group-active:opacity-100 transition" />
+
       {/* North — Score */}
       <Stat style={{ top: -4, left: "50%", transform: "translateX(-50%)" }} n={score} sub={scoreSub} accent />
       {/* East — Trend */}
@@ -78,6 +80,9 @@ export function MeridianCompass({
           </div>
         </div>
       )}
+      <div className="absolute left-1/2 -bottom-6 -translate-x-1/2 whitespace-nowrap rounded-full border border-[var(--olo)]/20 bg-background/80 px-2.5 py-1 text-[9px] uppercase tracking-[0.14em] text-[var(--olo)] shadow-sm opacity-90">
+        Tap to open
+      </div>
     </button>
   );
 }
