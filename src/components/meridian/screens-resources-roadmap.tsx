@@ -46,11 +46,11 @@ export function ResourcesScreen({ onOpenIndustryBrief, onOpenDrill, onOpenLexico
             <div className="absolute bottom-0 inset-x-0 p-5">
               <div className="font-serif text-[26px] text-white leading-[1.1] font-light tracking-tight mb-1.5">{brief.title}</div>
               <div className="text-[11px] text-white/70 font-light mb-3">{brief.subtitle}</div>
-              <div className="flex items-center gap-3 text-white/85 text-[11px]">
-                <span className="flex items-center gap-1.5"><I.Map width={11} height={11} /> {(brief.steps?.length ?? 0)} step walkthrough</span>
+              <div className="flex items-center gap-2.5 text-white/80 text-[10px] tracking-wide">
+                <span className="flex items-center gap-1"><I.Map width={10} height={10} /> {(brief.steps?.length ?? 0)} steps</span>
                 <span className="w-1 h-1 rounded-full bg-white/40" />
-                <span className="flex items-center gap-1.5"><I.Clock width={11} height={11} /> {brief.timing}</span>
-                <span className="ml-auto flex items-center gap-1 text-[var(--olo)]">Open <I.ArrowRight width={11} height={11} /></span>
+                <span className="flex items-center gap-1"><I.Clock width={10} height={10} /> {brief.timing}</span>
+                <span className="ml-auto flex items-center gap-1 text-[var(--olo)]"><I.ArrowRight width={11} height={11} /></span>
               </div>
             </div>
           </button>
@@ -206,21 +206,21 @@ export function IndustryBriefDetail({ onBack }: { onBack: () => void }) {
 
         {b.whereYouAre && (
           <div className="bg-surface rounded-2xl px-4 py-4 shadow-[0_1px_5px_rgba(0,0,0,0.05)]">
-            <div className="text-[10px] tracking-[0.18em] uppercase text-ink3 mb-1.5">Where you are</div>
-            <p className="text-[13px] text-ink2 leading-relaxed font-light">{b.whereYouAre}</p>
+            <div className="text-[10px] tracking-[0.18em] uppercase text-ink3 mb-1.5">Now</div>
+            <p className="text-[13px] text-ink2 leading-relaxed font-light line-clamp-3">{b.whereYouAre}</p>
           </div>
         )}
 
         {b.whereYouAreGoing && (
           <div className="bg-[var(--navy)] rounded-2xl px-4 py-4 text-white">
-            <div className="text-[10px] tracking-[0.18em] uppercase text-white/50 mb-1.5">Where you're going</div>
-            <p className="text-[13px] text-white/90 leading-relaxed font-light">{b.whereYouAreGoing}</p>
+            <div className="text-[10px] tracking-[0.18em] uppercase text-white/50 mb-1.5">Next</div>
+            <p className="text-[13px] text-white/90 leading-relaxed font-light line-clamp-3">{b.whereYouAreGoing}</p>
           </div>
         )}
 
         {b.steps && b.steps.length > 0 && (
           <div>
-            <div className="text-[10px] tracking-[0.18em] uppercase text-ink3 mb-2.5 flex items-center gap-1.5"><I.Map width={11} height={11} /> The walkthrough</div>
+            <div className="text-[10px] tracking-[0.18em] uppercase text-ink3 mb-2.5 flex items-center gap-1.5"><I.Map width={11} height={11} /> Path</div>
             <div className="space-y-2.5 relative">
               <div className="absolute left-[14px] top-2 bottom-2 w-px bg-[var(--olo)]/25" />
               {b.steps.map((s) => (
@@ -231,9 +231,9 @@ export function IndustryBriefDetail({ onBack }: { onBack: () => void }) {
                       <div className="text-[13px] text-ink font-normal leading-snug">{s.title}</div>
                       <div className="text-[10px] tracking-wider text-[var(--olo)] flex-shrink-0">{s.timeframe}</div>
                     </div>
-                    <p className="text-[12px] text-ink2 leading-relaxed font-light mb-1.5">{s.what}</p>
-                    <p className="text-[11px] text-ink3 leading-relaxed font-light italic mb-2">Why · {s.why}</p>
-                    <div className="bg-[var(--olo)]/10 rounded-md px-2.5 py-1.5 text-[11px] text-ink leading-snug font-light">
+                    <p className="text-[12px] text-ink2 leading-relaxed font-light mb-1.5 line-clamp-3">{s.what}</p>
+                    <p className="text-[11px] text-ink3 leading-relaxed font-light italic mb-2 line-clamp-2">Why · {s.why}</p>
+                    <div className="bg-[var(--olo)]/10 rounded-md px-2.5 py-1.5 text-[11px] text-ink leading-snug font-light line-clamp-2">
                       <span className="text-[var(--olo)] tracking-wide text-[9px] uppercase mr-1.5">Signal</span>{s.signal}
                     </div>
                   </div>
@@ -247,9 +247,9 @@ export function IndustryBriefDetail({ onBack }: { onBack: () => void }) {
           <div className="bg-[var(--olo)]/10 border-l-2 border-[var(--olo)] rounded-r-xl px-4 py-3.5">
             <div className="flex items-center gap-1.5 mb-1.5">
               <I.Target width={12} height={12} className="text-[var(--olo)]" />
-              <span className="text-[10px] tracking-[0.16em] uppercase text-[var(--olo)] font-medium">Market context · right now</span>
+              <span className="text-[10px] tracking-[0.16em] uppercase text-[var(--olo)] font-medium">Market</span>
             </div>
-            <p className="text-[13px] text-ink leading-relaxed font-light">{b.marketContext}</p>
+            <p className="text-[13px] text-ink leading-relaxed font-light line-clamp-3">{b.marketContext}</p>
           </div>
         )}
       </div>

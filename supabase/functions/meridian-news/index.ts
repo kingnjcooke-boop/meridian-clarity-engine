@@ -32,10 +32,28 @@ async function ogImage(url: string): Promise<string | null> {
   }
 }
 
-function photoFallback(keywords: string[], seed: number): string {
-  const tag = encodeURIComponent((keywords && keywords.length ? keywords : ["newsroom", "office"]).slice(0, 3).join(","));
-  // LoremFlickr serves real Flickr photographs keyed to tags
-  return `https://loremflickr.com/800/520/${tag}?lock=${seed}`;
+async function wikiThumb(keyword: string): Promise<string | null> {
+  try {
+    const title = encodeURIComponent(keyword.trim().replace(/\s+/g, "_"));
+    const r = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${title}`, {
+      headers: { "User-Agent": "MeridianBot/1.0", Accept: "application/json" },
+    });
+    if (!r.ok) return null;
+    const j = await r.json();
+    const url = j?.originalimage?.source || j?.thumbnail?.source;
+    return typeof url === "string" && /^https?:\/\//.test(url) ? url : null;
+  } catch {
+    return null;
+  }
+}
+
+function brandedSvg(source: string, headline: string, seed: number): string {
+  const palette = ["#0c2340", "#3b6d11", "#0c447c", "#5c2018", "#143d2f"];
+  const bg = palette[Math.abs(seed) % palette.length];
+  const src = (source || "Meridian").slice(0, 32).replace(/[<>&]/g, "");
+  const line = (headline || "").slice(0, 56).replace(/[<>&]/g, "");
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520"><rect width="800" height="520" fill="${bg}"/><text x="48" y="120" fill="rgba(255,255,255,0.55)" font-family="Georgia, serif" font-size="20" letter-spacing="3">${src.toUpperCase()}</text><text x="48" y="280" fill="#fff" font-family="Georgia, serif" font-size="44" font-style="italic">${line}</text></svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
 Deno.serve(async (req) => {
@@ -71,7 +89,7 @@ COPY RULES (strictly enforced):
 - badgeText: 1-3 words.
 
 Output ONLY tool calls.` },
-          { role: "user", content: `Generate ${count} CURRENT (last 3 weeks: ${cutoff} → ${todayStr}) news stories that someone targeting "${target}"${niche ? ` (${niche})` : ""} (${industry}, ${stage})${employers ? `, watching ${employers}` : ""} should track. For each: cite the real source publisher (Bloomberg Law, Reuters, Politico, FT, WSJ, Law360, Axios, etc.), and if you know a real article URL, return it in articleUrl. Provide thumbnailKeywords = 2-3 concrete photographic subjects (real people titles, locations, objects, brand names) that would appear in a news photo of this story — NOT abstractions like "growth" or "innovation". Urgency dot: #ef4444 high, #f59e0b medium, #10b981 watch.` }
+          { role: "user", content: `Generate ${count} CURRENT (last 3 weeks: ${cutoff} → ${todayStr}) news stories that someone targeting "${target}"${niche ? ` (${niche})` : ""} (${industry}, ${stage})${employers ? `, watching ${employers}` : ""} should track. For each: cite the real source publisher (Bloomberg Law, Reuters, Politico, FT, WSJ, Law360, Axios, etc.), and if you know a real article URL, return it in articleUrl. Provide thumbnailKeywords = 2-3 SPECIFIC NAMED ENTITIES that exist as Wikipedia articles — e.g. "Federal Trade Commission", "Gibson Dunn", "Lina Khan", "U.S. Capitol", "Latham & Watkins". NO abstractions, NO generic nouns like "growth" or "office". Order keywords most-specific-first. Urgency dot: #ef4444 high, #f59e0b medium, #10b981 watch.` }
         ],
         tools: [{
           type: "function",
@@ -125,14 +143,20 @@ Output ONLY tool calls.` },
       return !isNaN(t) ? t >= cutoffMs : true;
     });
 
-    // Resolve images in parallel — try og:image of articleUrl first; fall back to a real photographic stock.
+    // Resolve images: og:image of articleUrl → Wikipedia thumb of each keyword → branded SVG.
     const stories = await Promise.all(
       fresh.map(async (s: any, i: number) => {
         let img: string | null = null;
         if (typeof s.articleUrl === "string" && /^https?:\/\//i.test(s.articleUrl)) {
           img = await ogImage(s.articleUrl);
         }
-        if (!img) img = photoFallback(s.thumbnailKeywords || [], i + Date.parse(s.publishedAt || "") || i);
+        if (!img) {
+          for (const kw of (s.thumbnailKeywords || [])) {
+            img = await wikiThumb(kw);
+            if (img) break;
+          }
+        }
+        if (!img) img = brandedSvg(s.source || "Meridian", s.headline || "", i + (Date.parse(s.publishedAt || "") || i));
         return { ...s, id: i, img };
       })
     );
