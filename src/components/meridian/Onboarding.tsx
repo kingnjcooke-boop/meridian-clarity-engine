@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { MeridianMark, I } from "./icons";
 import { supabase } from "@/integrations/supabase/client";
+import { AuthScreen } from "./AuthScreen";
 
 export type OnboardingData = {
   mode: "signup" | "signin";
@@ -50,9 +51,24 @@ const STAGES = [
   "Career Switcher",
 ];
 
-export function Onboarding({ onDone }: { onDone: (d: OnboardingData) => void }) {
-  const [step, setStep] = useState(0);
-  const [data, setData] = useState<OnboardingData>({
+export function Onboarding({
+  onDone,
+  initial = null,
+  requireAuth = false,
+  skipAuthSteps = false,
+}: {
+  onDone: (d: OnboardingData) => void;
+  initial?: OnboardingData | null;
+  requireAuth?: boolean;
+  skipAuthSteps?: boolean;
+}) {
+  // Steps:
+  // 0 = welcome (only when requireAuth and no session)
+  // 0.5 = auth screen (handled separately below)
+  // 1 = industry, 2 = current, 3 = niche, 4 = target, 5 = employers
+  const [authMode, setAuthMode] = useState<"signup" | "signin" | null>(requireAuth ? null : null);
+  const [step, setStep] = useState(skipAuthSteps ? 1 : 0);
+  const [data, setData] = useState<OnboardingData>(initial || {
     mode: "signup", name: "", email: "", industry: "", niche: "", current: "", target: "", employers: [],
   });
   const [animKey, setAnimKey] = useState(0);
