@@ -112,7 +112,7 @@ export function MeridianCompass({
       </svg>
 
       {/* Center reading */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
+      <div className="absolute inset-0 flex-col flex items-center justify-center">
         {locked ? (
           <>
             <div className="text-[9px] tracking-[0.24em] uppercase text-white/40">Locked</div>
