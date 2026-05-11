@@ -38,6 +38,7 @@ export type ScoreData = {
   summary: string;
   gaps: { title: string; severity: string; why: string; nextAction: string }[];
   strengths: string[];
+  roadmap?: { title: string; gap: string; pts: number; time: string; signal: string; why: string; steps: string[]; tip: string }[];
 };
 
 type Ctx = {
@@ -97,7 +98,7 @@ export function MeridianDataProvider({ user, children }: { user: OnboardingData;
     finally { setScoreLoading(false); }
   }
 
-  useEffect(() => { fetchStories(); fetchResources(); /* eslint-disable-next-line */ }, [user.industry, user.target, user.current, user.niche, JSON.stringify(user.employers)]);
+  useEffect(() => { fetchStories(); fetchResources(); /* eslint-disable-next-line */ }, [user.industry, user.target, user.current, user.niche, JSON.stringify(user.employers), user.resumeText]);
   useEffect(() => { fetchScore(); /* eslint-disable-next-line */ }, [user.hasResume, user.resumeText, user.target, user.niche]);
 
   return (
