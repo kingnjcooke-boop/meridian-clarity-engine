@@ -12,6 +12,19 @@ const briefImage = (b: any, target: string) => {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 };
 
+async function wikiThumb(keyword: string): Promise<string | null> {
+  try {
+    const title = encodeURIComponent(String(keyword).trim().replace(/\s+/g, "_"));
+    const r = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${title}`, {
+      headers: { "User-Agent": "MeridianBot/1.0", Accept: "application/json" },
+    });
+    if (!r.ok) return null;
+    const j = await r.json();
+    const url = j?.originalimage?.source || j?.thumbnail?.source;
+    return typeof url === "string" && /^https?:\/\//.test(url) ? url : null;
+  } catch { return null; }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
