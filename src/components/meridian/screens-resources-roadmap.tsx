@@ -9,7 +9,7 @@ const themeMap: Record<string, string> = {
   blue: "from-[#185FA5] to-[#2978c8]",
 };
 
-export function ResourcesScreen({ onOpenIndustryBrief, onOpenDrill }: { onOpenIndustryBrief: () => void; onOpenDrill: (idx: number) => void }) {
+export function ResourcesScreen({ onOpenIndustryBrief, onOpenDrill, onOpenLexicon }: { onOpenIndustryBrief: () => void; onOpenDrill: (idx: number) => void; onOpenLexicon: () => void }) {
   const { resources, resourcesLoading, resourcesError, refreshResources } = useMeridianData();
   const brief = resources?.industryBrief;
 
@@ -91,27 +91,23 @@ export function ResourcesScreen({ onOpenIndustryBrief, onOpenDrill }: { onOpenIn
 
       {resources?.lexicon && resources.lexicon.length > 0 && (
         <>
-          <SecRow label="Insider Lexicon" />
+          <SecRow label="Insider Lexicon" link="Open" onLink={onOpenLexicon} />
           <div className="px-5">
-            <div className="bg-surface rounded-2xl shadow-[0_1px_5px_rgba(0,0,0,0.05)] overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-black/[0.05] dark:border-white/10 flex items-center gap-2">
+            <button onClick={onOpenLexicon} className="w-full bg-surface rounded-2xl shadow-[0_1px_5px_rgba(0,0,0,0.05)] overflow-hidden text-left active:scale-[0.99] transition">
+              <div className="px-4 py-3 border-b border-black/[0.05] dark:border-white/10 flex items-center gap-2">
                 <I.Sparkles width={11} height={11} className="text-[var(--olo)]" />
                 <div className="text-[10px] tracking-[0.18em] uppercase text-ink3">What insiders know · {resources.lexicon.length} terms</div>
+                <I.ArrowRight width={12} height={12} className="ml-auto text-[var(--olo)]" />
               </div>
-              <div className="divide-y divide-black/[0.04] dark:divide-white/[0.06]">
-                {resources.lexicon.map((l, i) => (
-                  <details key={i} className="px-4 py-2 group">
-                    <summary className="cursor-pointer list-none flex items-baseline gap-2">
-                      <span className="font-serif italic text-[13.5px] text-ink leading-snug flex-shrink-0">{l.term}</span>
-                      <span className="text-[11px] text-ink3 font-light truncate flex-1">— {l.definition}</span>
-                    </summary>
-                    <div className="mt-1.5 ml-1 pl-2.5 text-[11.5px] text-ink2 font-light leading-relaxed border-l-2 border-[var(--olo)]/40">
-                      <span className="text-[var(--olo)] tracking-wider text-[9px] uppercase mr-1.5">Why it matters</span>{l.whyItMatters}
-                    </div>
-                  </details>
+              <div className="px-4 py-3 grid grid-cols-2 gap-2">
+                {resources.lexicon.slice(0, 4).map((l, i) => (
+                  <div key={i} className="rounded-xl bg-black/[0.025] dark:bg-white/[0.04] px-3 py-2 min-h-[58px]">
+                    <div className="font-serif italic text-[13px] text-ink leading-snug line-clamp-2">{l.term}</div>
+                    <div className="text-[10px] text-ink3 mt-1">Tap to unpack</div>
+                  </div>
                 ))}
               </div>
-            </div>
+            </button>
           </div>
         </>
       )}
