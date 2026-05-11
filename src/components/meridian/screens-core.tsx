@@ -2,6 +2,8 @@ import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { I, MeridianMark } from "./icons";
 import type { OnboardingData } from "./Onboarding";
 import { useMeridianData, tierFromScore } from "./MeridianDataContext";
+import { CohortCurve } from "./CohortCurve";
+import { useCohortStats, percentileFromCurve } from "@/lib/cohort";
 
 type StoryId = number;
 
@@ -68,13 +70,15 @@ export function BriefScreen({ user, dark, setDark, onOpenStory, onOpenRoadmap, o
         </h1>
       </div>
 
-      {/* Editorial Score Hero */}
+      {/* Editorial Score Hero with cohort distribution */}
       <div className="pt-5 pb-2">
         <ScoreHero
+          user={user}
           onClick={onOpenPosition}
           locked={!user.hasResume}
           loading={scoreLoading}
           score={scoreStr}
+          rawScore={hasScore ? scoreData!.score : null}
           tier={scoreSub}
           trend={trendStr}
           trendSub={trendSub}
@@ -100,8 +104,7 @@ export function BriefScreen({ user, dark, setDark, onOpenStory, onOpenRoadmap, o
               <span className="text-[10px] text-white/85 tracking-wider">{s.badge.text}</span>
             </div>
             <div className="absolute top-3.5 left-3.5 bg-black/40 backdrop-blur-md border border-white/10 rounded-full px-2 py-0.5 flex items-center gap-1">
-              <I.CheckCircle width={9} height={9} className="text-emerald-300" />
-              <span className="text-[9px] text-white/70 tracking-wider">{s.confirmedBy.length} sources</span>
+              <span className="text-[9px] text-white/70 tracking-wider uppercase">{s.source}</span>
             </div>
             <div className="absolute bottom-0 inset-x-0 p-4 pb-5">
               <span className="inline-block text-[9px] tracking-[0.13em] uppercase px-2.5 py-1 rounded-full mb-2" style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.85)" }}>{s.tag}</span>
@@ -209,14 +212,16 @@ export function SecRow({ label, link, onLink }: { label: string; link?: string; 
 }
 
 function ScoreHero({
-  score, tier, trend, trendSub, gaps, gapsSub, strength, gap,
+  user, score, rawScore, tier, trend, trendSub, gaps, gapsSub, strength, gap,
   locked, loading, onClick,
 }: {
-  score: string; tier: string; trend: string; trendSub: string; gaps: string; gapsSub: string;
+  user: OnboardingData;
+  score: string; rawScore: number | null; tier: string; trend: string; trendSub: string; gaps: string; gapsSub: string;
   strength?: string; gap?: string; locked?: boolean; loading?: boolean; onClick: () => void;
 }) {
   const trim = (s?: string, n = 44) => (s ? (s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s) : "");
-  const pct = (() => { const n = Number(score); return Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 0; })();
+  const { stats } = useCohortStats(user.industry, user.niche, user.target);
+  const pct = !locked && rawScore != null && stats ? percentileFromCurve(rawScore, stats) : null;
 
   return (
     <button onClick={onClick} className="block w-full text-left group focus:outline-none" aria-label="Open positioning">
@@ -242,33 +247,22 @@ function ScoreHero({
               {locked ? "Locked" : tier}
             </div>
             <div className="text-[10px] tracking-[0.22em] uppercase text-ink3 mt-1.5 font-light">
-              {locked ? "Add resume" : "of 100"}
+              {locked ? "Add resume" : (pct != null ? `Top ${Math.max(1, 100 - pct)}% of cohort` : "of 100")}
             </div>
           </div>
         </div>
 
-        {/* Hairline rule + progress */}
-        <div className="relative mt-5 mb-4 h-[1px] bg-black/8 dark:bg-white/10">
-          {!locked && pct > 0 && (
-            <div
-              className="absolute left-0 top-1/2 -translate-y-1/2 h-[1px]"
-              style={{
-                width: `${pct}%`,
-                background: "linear-gradient(90deg, var(--olo), oklch(0.82 0.14 60))",
-                boxShadow: "0 0 8px color-mix(in oklab, var(--olo) 50%, transparent)",
-              }}
-            />
-          )}
-          {!locked && pct > 0 && (
-            <div
-              className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[var(--olo)]"
-              style={{ left: `calc(${pct}% - 3px)`, boxShadow: "0 0 8px var(--olo)" }}
-            />
+        {/* Cohort distribution curve — the signature visual */}
+        <div className="mt-5 -mx-1 text-ink/70">
+          {stats ? (
+            <CohortCurve stats={stats} score={locked ? null : rawScore} height={150} showAxis />
+          ) : (
+            <div className="h-[150px]" />
           )}
         </div>
 
         {/* Inline metric trio */}
-        <div className="grid grid-cols-3 divide-x divide-black/[0.07] dark:divide-white/[0.08]">
+        <div className="grid grid-cols-3 divide-x divide-black/[0.07] dark:divide-white/[0.08] mt-2">
           <div className="pr-3">
             <div className="text-[8.5px] tracking-[0.22em] uppercase text-ink3 font-light">{trendSub}</div>
             <div className="font-serif text-[20px] text-[var(--olo)] font-light leading-tight mt-0.5 tabular-nums">{locked ? "—" : trend}</div>
@@ -278,8 +272,11 @@ function ScoreHero({
             <div className="font-serif text-[20px] text-ink font-light leading-tight mt-0.5 tabular-nums">{locked ? "—" : gaps}</div>
           </div>
           <div className="pl-3">
-            <div className="text-[8.5px] tracking-[0.22em] uppercase text-ink3 font-light">Tier</div>
-            <div className="font-serif italic text-[15px] text-ink font-light leading-tight mt-1 truncate">{locked ? "—" : tier}</div>
+            <div className="text-[8.5px] tracking-[0.22em] uppercase text-ink3 font-light">Cohort</div>
+            <div className="font-serif text-[15px] text-ink font-light leading-tight mt-1 tabular-nums">
+              {stats ? `${stats.sample_size}` : "—"}
+              <span className="text-[9.5px] tracking-[0.18em] uppercase text-ink3 font-light ml-1">placed</span>
+            </div>
           </div>
         </div>
 
@@ -359,37 +356,23 @@ export function PositionScreen({ user, onReposition, onUpdateResume, onBack }: {
 
       <SecRow label="Your Market Position" link="See all" />
 
-      <div className="mx-5 bg-[var(--navy)] rounded-3xl px-6 py-6 relative overflow-hidden">
-        <svg viewBox="0 0 64 80" width="200" height="320" className="absolute right-[-30px] top-1/2 -translate-y-1/2 pointer-events-none">
-          <line x1="32" y1="4" x2="32" y2="76" stroke="white" strokeWidth=".7" opacity=".06"/>
-          <circle cx="32" cy="40" r="24" stroke="white" strokeWidth=".7" fill="none" opacity=".06"/>
-        </svg>
-        <div className="text-[9px] tracking-[0.2em] uppercase text-white/30 mb-2.5">Positioning Score</div>
-        <div className="font-serif text-[88px] font-light text-white leading-[0.9] tracking-tight tabular-nums">{score}</div>
-        <div className="flex items-center gap-3.5 mt-2 flex-wrap">
-          <div className="inline-flex items-center gap-1.5 bg-[var(--olo-dim)] border border-[var(--olo)]/30 rounded-full px-2.5 py-1">
-            <I.TrendUp width={10} height={10} className="text-[var(--olo)]" />
-            <span className="text-[11px] text-[var(--olo)] tracking-wide">{scoreData ? tierFromScore(scoreData.score) : "—"}</span>
-          </div>
-          <svg width="84" height="28" viewBox="0 0 84 28">
-            <polyline points="0,24 14,18 28,21 42,11 56,7 70,3 84,1" fill="none" stroke="rgba(198,139,78,.45)" strokeWidth="1.2" strokeLinecap="round" />
-            <circle cx="84" cy="1" r="2.5" fill="var(--olo)" opacity=".7" />
-          </svg>
+      <CohortPositionPanel user={user} animScore={score} />
+
+      {scoreData?.summary && (
+        <div className="px-5 mt-4 text-[13px] text-ink2 font-light leading-relaxed italic" style={{ fontFamily: "var(--font-serif)" }}>
+          {scoreData.summary}
         </div>
-        <div className="text-[11px] text-white/40 mt-1.5 font-light leading-relaxed">Among {user.current || "early-career"} targeting {user.target || "your market"}</div>
-        {scoreData?.summary && (
-          <div className="text-[12px] text-white/70 mt-3 font-light leading-relaxed">{scoreData.summary}</div>
-        )}
-        {user.employers.length > 0 && (
-          <div className="flex items-center gap-1.5 mt-3.5 flex-wrap">
-            <span className="text-[10px] text-white/30 tracking-wider">Watching</span>
-            {user.employers.slice(0, 5).map((f) => (
-              <span key={f} className="text-[10px] text-white/55 bg-white/5 border border-white/10 rounded-full px-2 py-0.5">{f}</span>
-            ))}
-            {user.employers.length > 5 && <span className="text-[10px] text-white/40">+{user.employers.length - 5}</span>}
-          </div>
-        )}
-      </div>
+      )}
+
+      {user.employers.length > 0 && (
+        <div className="px-5 mt-3 flex items-center gap-1.5 flex-wrap">
+          <span className="text-[10px] text-ink3 tracking-wider uppercase">Watching</span>
+          {user.employers.slice(0, 5).map((f) => (
+            <span key={f} className="text-[10px] text-ink2 bg-black/[0.04] dark:bg-white/[0.06] rounded-full px-2 py-0.5">{f}</span>
+          ))}
+          {user.employers.length > 5 && <span className="text-[10px] text-ink3">+{user.employers.length - 5}</span>}
+        </div>
+      )}
 
       {scoreData?.strengths?.length ? (
         <>
@@ -427,6 +410,34 @@ function GapCard({ icon, title, pts, sub, w }: any) {
       <div className="text-[11px] text-ink3 mb-2.5 font-light">{sub}</div>
       <div className="h-[3px] bg-black/[0.06] dark:bg-white/10 rounded overflow-hidden">
         <div className="h-full bg-[var(--olo)] transition-all duration-[1400ms] ease-out" style={{ width: `${width}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function CohortPositionPanel({ user, animScore }: { user: OnboardingData; animScore: number }) {
+  const { scoreData } = useMeridianData();
+  const { stats } = useCohortStats(user.industry, user.niche, user.target);
+  const raw = scoreData?.score ?? null;
+  const pct = raw != null && stats ? percentileFromCurve(raw, stats) : null;
+
+  return (
+    <div className="mx-5 bg-[var(--navy)] text-white rounded-3xl px-6 py-6 relative overflow-hidden">
+      <div className="text-[9px] tracking-[0.22em] uppercase text-white/30 mb-2">Positioning Score</div>
+      <div className="flex items-end gap-4">
+        <div className="font-serif text-[88px] font-light leading-[0.9] tracking-tight tabular-nums">{animScore}</div>
+        <div className="pb-3">
+          <div className="font-serif italic text-[18px] leading-none">{raw != null ? tierFromScore(raw) : "—"}</div>
+          <div className="text-[10px] tracking-[0.2em] uppercase text-white/40 mt-1.5">
+            {pct != null ? `Top ${Math.max(1, 100 - pct)}% of cohort` : "Calibrating"}
+          </div>
+        </div>
+      </div>
+      <div className="mt-5 text-white/90">
+        {stats ? <CohortCurve stats={stats} score={raw} height={170} /> : <div className="h-[170px]" />}
+      </div>
+      <div className="text-[10.5px] text-white/45 mt-1 font-light tracking-wide">
+        {stats ? `${stats.sample_size} placed candidates · ${user.target || "target market"}` : "Loading cohort distribution"}
       </div>
     </div>
   );

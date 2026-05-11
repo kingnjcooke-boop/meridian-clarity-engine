@@ -12,11 +12,11 @@ export function AlertsScreen({ onOpenStory }: { onOpenStory: (id: number) => voi
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar fade-in pb-6">
       <div className="px-5 pt-3 pb-2">
-        <div className="text-[10px] tracking-[0.18em] uppercase text-ink3 font-light">AI-Verified Intelligence</div>
+        <div className="text-[10px] tracking-[0.18em] uppercase text-ink3 font-light">Market Intelligence</div>
         <div className="font-serif text-[26px] text-ink leading-tight font-light tracking-tight">Industry Alerts</div>
         <div className="text-[11px] text-ink3 mt-1 font-light flex items-center gap-1.5">
           <span className="slow-pulse w-1.5 h-1.5 rounded-full bg-emerald-500" />
-          Sourced from the web · only published when ≥3 sources agree
+          Curated against your target market
         </div>
       </div>
 
@@ -43,9 +43,8 @@ export function AlertsScreen({ onOpenStory }: { onOpenStory: (id: number) => voi
             <div className="relative h-[140px]">
               <img src={s.img} alt="" className="w-full h-full object-cover" loading="lazy" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-              <div className="absolute top-3 left-3 bg-black/40 backdrop-blur-md border border-white/10 rounded-full px-2 py-0.5 flex items-center gap-1">
-                <I.CheckCircle width={9} height={9} className="text-emerald-300" />
-                <span className="text-[9px] text-white/80 tracking-wider">{s.confirmedBy.length} sources</span>
+              <div className="absolute top-3 left-3 bg-black/40 backdrop-blur-md border border-white/10 rounded-full px-2 py-0.5">
+                <span className="text-[9px] text-white/80 tracking-wider uppercase">{s.source}</span>
               </div>
               <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-md border border-white/10 rounded-2xl px-2.5 py-1 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full" style={{ background: s.badge.dot }} />
