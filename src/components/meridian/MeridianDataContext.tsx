@@ -5,7 +5,7 @@ import { STORIES as SEED_STORIES } from "./screens-core";
 
 export type Story = {
   id: number; headline: string; tag: string; source: string; age: string; publishedAt?: string;
-  summary: string; impact: string; badge: { dot: string; text: string }; confirmedBy: string[]; img: string;
+  summary: string; impact: string; action?: string; badge: { dot: string; text: string }; confirmedBy: string[]; img: string;
 };
 
 export type BriefStep = { number: number; title: string; timeframe: string; what: string; why: string; signal: string };
