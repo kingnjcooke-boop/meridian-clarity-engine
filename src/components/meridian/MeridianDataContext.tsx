@@ -69,7 +69,7 @@ export function MeridianDataProvider({ user, children }: { user: OnboardingData;
       if (error) throw error; if (data?.error) throw new Error(data.error);
       const mapped: Story[] = (data.stories || []).map((s: any, i: number) => ({
         id: i, headline: s.headline, tag: s.tag, source: s.source, age: s.age, publishedAt: s.publishedAt,
-        summary: s.summary, impact: s.impact, badge: { dot: s.badgeDot, text: s.badgeText },
+        summary: s.summary, impact: s.impact, action: s.action, badge: { dot: s.badgeDot, text: s.badgeText },
         confirmedBy: s.sources || [], img: s.img,
       }));
       if (mapped.length) setStories(mapped);
