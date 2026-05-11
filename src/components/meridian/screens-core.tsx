@@ -2,6 +2,8 @@ import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { I, MeridianMark } from "./icons";
 import type { OnboardingData } from "./Onboarding";
 import { useMeridianData, tierFromScore } from "./MeridianDataContext";
+import { CohortCurve } from "./CohortCurve";
+import { useCohortStats, percentileFromCurve } from "@/lib/cohort";
 
 type StoryId = number;
 
