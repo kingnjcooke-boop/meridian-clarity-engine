@@ -1,6 +1,6 @@
 import { I } from "./icons";
 import { ACTIONS, SecRow } from "./screens-core";
-import { useMeridianData } from "./MeridianDataContext";
+import { useMeridianData, scalePts } from "./MeridianDataContext";
 import type { ScoreData } from "./MeridianDataContext";
 
 const themeMap: Record<string, string> = {
@@ -9,6 +9,22 @@ const themeMap: Record<string, string> = {
   emerald: "from-emerald-700 to-emerald-600",
   blue: "from-[#185FA5] to-[#2978c8]",
 };
+
+const TEMPLATE_HOSTS = /^(https?:\/\/)?(www\.)?(canva\.com|novoresume\.com|resume\.io|zety\.com|resumegenius\.com|standardresume\.co|enhancv\.com|kickresume\.com|overleaf\.com|hloom\.com|resumeworded\.com|harvard\.edu|teal\.com|tealhq\.com)/i;
+const KNOWN_TEMPLATES = [
+  "https://www.canva.com/resumes/templates/",
+  "https://novoresume.com/resume-templates",
+  "https://resume.io/resume-templates",
+  "https://zety.com/resume-templates",
+  "https://www.overleaf.com/gallery/tags/cv",
+];
+function ensureTemplateUrl(url: string | undefined, name: string): string {
+  const u = String(url || "").trim();
+  if (u && TEMPLATE_HOSTS.test(u) && /^https?:\/\//.test(u)) return u;
+  // deterministic fallback by name hash so each card maps to a stable known-good URL
+  let h = 0; for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return KNOWN_TEMPLATES[h % KNOWN_TEMPLATES.length];
+}
 
 export function ResourcesScreen({ onOpenIndustryBrief, onOpenDrill, onOpenLexicon }: { onOpenIndustryBrief: () => void; onOpenDrill: (idx: number) => void; onOpenLexicon: () => void }) {
   const { resources, resourcesLoading, resourcesError, refreshResources } = useMeridianData();
@@ -61,7 +77,7 @@ export function ResourcesScreen({ onOpenIndustryBrief, onOpenDrill, onOpenLexico
       <div className="px-5 space-y-2">
         {resourcesLoading && !resources && [0,1,2].map(i => <div key={i} className="h-[78px] bg-surface rounded-2xl animate-pulse" />)}
         {resources?.resumes.map((r) => (
-          <a key={r.name} href={r.templateUrl} target="_blank" rel="noopener noreferrer" className="block bg-surface rounded-2xl p-4 shadow-[0_1px_5px_rgba(0,0,0,0.05)] flex gap-3 items-start hover:shadow-md transition">
+          <a key={r.name} href={ensureTemplateUrl(r.templateUrl, r.name)} target="_blank" rel="noopener noreferrer" className="block bg-surface rounded-2xl p-4 shadow-[0_1px_5px_rgba(0,0,0,0.05)] flex gap-3 items-start hover:shadow-md transition">
             <div className="w-11 h-14 rounded-md bg-gradient-to-br from-[var(--olo)]/20 to-[var(--navy)]/10 flex items-center justify-center text-[var(--olo)]">
               <I.FileText width={18} height={18} />
             </div>
@@ -310,7 +326,7 @@ function roadmapActions(scoreData?: ScoreData | null): RoadmapAction[] {
     title: a.title,
     signal: a.signal,
     gap: a.gap,
-    pts: Math.max(4, Math.min(15, Math.round(Number(a.pts) || 8))),
+    pts: scalePts(Math.max(4, Math.min(15, Math.round(Number(a.pts) || 8))), scoreData?.score),
     impact: i === 0 ? "High" : i < 3 ? "Medium" : "Focused",
     time: a.time,
     color: i % 3 === 1 ? "#C68B4E" : i % 3 === 2 ? "#185FA5" : "#3B6D11",

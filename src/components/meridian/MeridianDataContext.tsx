@@ -41,6 +41,28 @@ export type ScoreData = {
   roadmap?: { title: string; gap: string; pts: number; time: string; signal: string; why: string; steps: string[]; tip: string }[];
 };
 
+// Tier label derived from raw score (replaces "Bottom/Top %" language).
+export function tierFromScore(score: number | null | undefined): string {
+  const n = Number(score);
+  if (!Number.isFinite(n)) return "—";
+  if (n < 78) return "Emerging";
+  if (n < 86) return "Developing";
+  if (n < 91) return "Competitive";
+  if (n < 96) return "Sharp";
+  return "Elite";
+}
+
+// Scale a base point award by how much headroom the user has to 100.
+// Low score → bigger jumps; near-elite → small, refined gains.
+export function scalePts(base: number, score: number | null | undefined): number {
+  const n = Number.isFinite(Number(score)) ? Number(score) : 82;
+  const headroom = Math.max(2, 100 - n);
+  // Normalize: at score=82, headroom=18 → factor 1.0
+  const factor = headroom / 18;
+  const scaled = Math.round(base * factor);
+  return Math.max(2, Math.min(18, scaled));
+}
+
 type Ctx = {
   stories: Story[]; storiesLoading: boolean; storiesError: string | null; refreshStories: () => void;
   resources: Resources | null; resourcesLoading: boolean; resourcesError: string | null; refreshResources: () => void;

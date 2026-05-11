@@ -1,7 +1,7 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { I, MeridianMark } from "./icons";
 import type { OnboardingData } from "./Onboarding";
-import { useMeridianData } from "./MeridianDataContext";
+import { useMeridianData, tierFromScore } from "./MeridianDataContext";
 import { MeridianCompass } from "./MeridianCompass";
 
 type StoryId = number;
@@ -39,7 +39,7 @@ export function BriefScreen({ user, dark, setDark, onOpenStory, onOpenRoadmap, o
 
   const hasScore = user.hasResume && scoreData;
   const scoreStr = hasScore ? String(scoreData!.score) : (scoreLoading ? "…" : "—");
-  const scoreSub = hasScore ? scoreData!.percentile : (scoreLoading ? "Scoring" : user.hasResume ? "Calibrating" : "Locked");
+  const scoreSub = hasScore ? tierFromScore(scoreData!.score) : (scoreLoading ? "Scoring" : user.hasResume ? "Calibrating" : "Locked");
   const trendStr = hasScore ? (scoreData!.trend >= 0 ? `+${scoreData!.trend}` : `${scoreData!.trend}`) : "—";
   const trendSub = hasScore ? scoreData!.trendLabel : "7-Day";
   const gapsStr = hasScore ? String(scoreData!.gapsCount) : "—";
@@ -299,7 +299,7 @@ export function PositionScreen({ user, onReposition, onUpdateResume, onBack }: {
         <div className="flex items-center gap-3.5 mt-2 flex-wrap">
           <div className="inline-flex items-center gap-1.5 bg-[var(--olo-dim)] border border-[var(--olo)]/30 rounded-full px-2.5 py-1">
             <I.TrendUp width={10} height={10} className="text-[var(--olo)]" />
-            <span className="text-[11px] text-[var(--olo)] tracking-wide">{scoreData?.percentile || "—"}</span>
+            <span className="text-[11px] text-[var(--olo)] tracking-wide">{scoreData ? tierFromScore(scoreData.score) : "—"}</span>
           </div>
           <svg width="84" height="28" viewBox="0 0 84 28">
             <polyline points="0,24 14,18 28,21 42,11 56,7 70,3 84,1" fill="none" stroke="rgba(198,139,78,.45)" strokeWidth="1.2" strokeLinecap="round" />

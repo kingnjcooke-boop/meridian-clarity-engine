@@ -44,9 +44,9 @@ export function MeridianCompass({
       style={{ width: size, height: size }}
       aria-label="Open positioning"
     >
-      {/* Frosted glass body — light & dark adaptive via layered overlays */}
+      {/* Frosted glass body — light surface */}
       <div
-        className="absolute inset-0 rounded-full bg-white/55 dark:bg-white/[0.04] border border-black/[0.06] dark:border-white/10"
+        className="absolute inset-0 rounded-full bg-white/55 dark:bg-transparent border border-black/[0.06] dark:border-white/10"
         style={{
           backdropFilter: "blur(22px) saturate(160%)",
           WebkitBackdropFilter: "blur(22px) saturate(160%)",
@@ -54,8 +54,19 @@ export function MeridianCompass({
             "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.06), 0 18px 38px rgba(15,20,30,0.10)",
         }}
       />
+      {/* Dark mode body — restored original frosted dark */}
       <div
-        className="absolute inset-0 rounded-full pointer-events-none opacity-70 dark:opacity-100"
+        className="absolute inset-0 rounded-full hidden dark:block"
+        style={{
+          background: "rgba(10,14,22,0.42)",
+          backdropFilter: "blur(22px) saturate(160%)",
+          WebkitBackdropFilter: "blur(22px) saturate(160%)",
+          boxShadow:
+            "inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.35), 0 18px 38px rgba(0,0,0,0.45)",
+        }}
+      />
+      <div
+        className="absolute inset-0 rounded-full pointer-events-none opacity-70 dark:opacity-90"
         style={{
           background:
             "radial-gradient(120% 120% at 30% 20%, rgba(255,255,255,0.45), transparent 55%), radial-gradient(120% 120% at 70% 90%, rgba(12,35,64,0.06), transparent 60%)",
