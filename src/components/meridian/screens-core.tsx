@@ -213,14 +213,16 @@ export function SecRow({ label, link, onLink }: { label: string; link?: string; 
 }
 
 function ScoreHero({
-  score, tier, trend, trendSub, gaps, gapsSub, strength, gap,
+  user, score, rawScore, tier, trend, trendSub, gaps, gapsSub, strength, gap,
   locked, loading, onClick,
 }: {
-  score: string; tier: string; trend: string; trendSub: string; gaps: string; gapsSub: string;
+  user: OnboardingData;
+  score: string; rawScore: number | null; tier: string; trend: string; trendSub: string; gaps: string; gapsSub: string;
   strength?: string; gap?: string; locked?: boolean; loading?: boolean; onClick: () => void;
 }) {
   const trim = (s?: string, n = 44) => (s ? (s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s) : "");
-  const pct = (() => { const n = Number(score); return Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 0; })();
+  const { stats } = useCohortStats(user.industry, user.niche, user.target);
+  const pct = !locked && rawScore != null && stats ? percentileFromCurve(rawScore, stats) : null;
 
   return (
     <button onClick={onClick} className="block w-full text-left group focus:outline-none" aria-label="Open positioning">
@@ -246,33 +248,22 @@ function ScoreHero({
               {locked ? "Locked" : tier}
             </div>
             <div className="text-[10px] tracking-[0.22em] uppercase text-ink3 mt-1.5 font-light">
-              {locked ? "Add resume" : "of 100"}
+              {locked ? "Add resume" : (pct != null ? `Top ${Math.max(1, 100 - pct)}% of cohort` : "of 100")}
             </div>
           </div>
         </div>
 
-        {/* Hairline rule + progress */}
-        <div className="relative mt-5 mb-4 h-[1px] bg-black/8 dark:bg-white/10">
-          {!locked && pct > 0 && (
-            <div
-              className="absolute left-0 top-1/2 -translate-y-1/2 h-[1px]"
-              style={{
-                width: `${pct}%`,
-                background: "linear-gradient(90deg, var(--olo), oklch(0.82 0.14 60))",
-                boxShadow: "0 0 8px color-mix(in oklab, var(--olo) 50%, transparent)",
-              }}
-            />
-          )}
-          {!locked && pct > 0 && (
-            <div
-              className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[var(--olo)]"
-              style={{ left: `calc(${pct}% - 3px)`, boxShadow: "0 0 8px var(--olo)" }}
-            />
+        {/* Cohort distribution curve — the signature visual */}
+        <div className="mt-5 -mx-1 text-ink/70">
+          {stats ? (
+            <CohortCurve stats={stats} score={locked ? null : rawScore} height={150} showAxis />
+          ) : (
+            <div className="h-[150px]" />
           )}
         </div>
 
         {/* Inline metric trio */}
-        <div className="grid grid-cols-3 divide-x divide-black/[0.07] dark:divide-white/[0.08]">
+        <div className="grid grid-cols-3 divide-x divide-black/[0.07] dark:divide-white/[0.08] mt-2">
           <div className="pr-3">
             <div className="text-[8.5px] tracking-[0.22em] uppercase text-ink3 font-light">{trendSub}</div>
             <div className="font-serif text-[20px] text-[var(--olo)] font-light leading-tight mt-0.5 tabular-nums">{locked ? "—" : trend}</div>
@@ -282,8 +273,11 @@ function ScoreHero({
             <div className="font-serif text-[20px] text-ink font-light leading-tight mt-0.5 tabular-nums">{locked ? "—" : gaps}</div>
           </div>
           <div className="pl-3">
-            <div className="text-[8.5px] tracking-[0.22em] uppercase text-ink3 font-light">Tier</div>
-            <div className="font-serif italic text-[15px] text-ink font-light leading-tight mt-1 truncate">{locked ? "—" : tier}</div>
+            <div className="text-[8.5px] tracking-[0.22em] uppercase text-ink3 font-light">Cohort</div>
+            <div className="font-serif text-[15px] text-ink font-light leading-tight mt-1 tabular-nums">
+              {stats ? `${stats.sample_size}` : "—"}
+              <span className="text-[9.5px] tracking-[0.18em] uppercase text-ink3 font-light ml-1">placed</span>
+            </div>
           </div>
         </div>
 
