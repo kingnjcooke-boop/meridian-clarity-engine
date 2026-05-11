@@ -10,6 +10,22 @@ const themeMap: Record<string, string> = {
   blue: "from-[#185FA5] to-[#2978c8]",
 };
 
+const TEMPLATE_HOSTS = /^(https?:\/\/)?(www\.)?(canva\.com|novoresume\.com|resume\.io|zety\.com|resumegenius\.com|standardresume\.co|enhancv\.com|kickresume\.com|overleaf\.com|hloom\.com|resumeworded\.com|harvard\.edu|teal\.com|tealhq\.com)/i;
+const KNOWN_TEMPLATES = [
+  "https://www.canva.com/resumes/templates/",
+  "https://novoresume.com/resume-templates",
+  "https://resume.io/resume-templates",
+  "https://zety.com/resume-templates",
+  "https://www.overleaf.com/gallery/tags/cv",
+];
+function ensureTemplateUrl(url: string | undefined, name: string): string {
+  const u = String(url || "").trim();
+  if (u && TEMPLATE_HOSTS.test(u) && /^https?:\/\//.test(u)) return u;
+  // deterministic fallback by name hash so each card maps to a stable known-good URL
+  let h = 0; for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return KNOWN_TEMPLATES[h % KNOWN_TEMPLATES.length];
+}
+
 export function ResourcesScreen({ onOpenIndustryBrief, onOpenDrill, onOpenLexicon }: { onOpenIndustryBrief: () => void; onOpenDrill: (idx: number) => void; onOpenLexicon: () => void }) {
   const { resources, resourcesLoading, resourcesError, refreshResources } = useMeridianData();
   const brief = resources?.industryBrief;
