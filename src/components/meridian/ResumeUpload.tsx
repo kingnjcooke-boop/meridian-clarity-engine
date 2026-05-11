@@ -30,7 +30,8 @@ export function ResumeUpload({ initial, onCancel, onSave }: Props) {
   }
 
   async function extractDocxText(file: File) {
-    const mammoth = await import("mammoth/mammoth.browser");
+    const mammothMod = await import("mammoth/mammoth.browser");
+    const mammoth = mammothMod.default;
     const result = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
     return result.value || "";
   }
